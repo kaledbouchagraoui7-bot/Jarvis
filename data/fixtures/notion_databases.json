@@ -1,0 +1,8 @@
+{
+  "db-ops-workflows": [
+    {"name": "Daily standup log", "manual_minutes_per_day": 25, "frequency": "daily", "automation_status": "manual"},
+    {"name": "Invoice triage", "manual_minutes_per_day": 40, "frequency": "daily", "automation_status": "manual"},
+    {"name": "Lead enrichment", "manual_minutes_per_day": 15, "frequency": "hourly", "automation_status": "partial"},
+    {"name": "Weekly report compile", "manual_minutes_per_day": 90, "frequency": "weekly", "automation_status": "manual"}
+  ]
+}

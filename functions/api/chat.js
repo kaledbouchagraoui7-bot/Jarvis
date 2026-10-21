@@ -1,7 +1,7 @@
 // POST /api/chat — concierge backed by Cloudflare Workers AI when the AI
 // binding exists; returns 503 otherwise so the client falls back to its
 // built-in knowledge base (honest degradation, never a fake answer).
-import { json } from "./_auth.js";
+import { json } from "../_auth.js";
 
 const SYSTEM = `You are the concierge of JARVIS Enterprises, a Swiss solo enterprise.
 Answer ONLY from these facts; be concise (max 4 sentences); never give financial or legal advice;

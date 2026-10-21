@@ -1,0 +1,57 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Client Portal — JARVIS Enterprises</title>
+<meta name="description" content="Private area for JARVIS clients: deliverables, reports and downloads.">
+<link rel="stylesheet" href="/style.css"></head><body>
+<header><div class="wrap"><div class="topbar"><div class="brand"><a href="/" style="color:inherit;text-decoration:none">J A R V I S</a></div>
+<nav class="topnav"><a href="/">Home</a><a href="/#contact">Contact</a></nav></div></div></header>
+<section><div class="wrap" style="max-width:520px">
+<div class="eyebrow taupe">Client portal</div>
+<h1 style="font-size:clamp(30px,4vw,42px);margin:12px 0 8px">Your deliverables, privately.</h1>
+<p style="color:var(--ink2);font-size:14px;margin-bottom:24px">Accounts are created by the founder during onboarding. If you already have credentials, sign in below.</p>
+<div id="portal-msg"></div>
+<div class="calc" id="portal-auth">
+ <div id="login-form">
+  <label class="eyebrow" style="display:block;margin-bottom:8px">Email</label>
+  <input id="p-email" type="email" style="width:100%;font-size:16px" autocomplete="username">
+  <label class="eyebrow" style="display:block;margin:14px 0 8px">Password</label>
+  <input id="p-pass" type="password" style="width:100%;font-size:16px" autocomplete="current-password">
+  <p style="margin-top:18px"><button class="btn" id="p-login">Sign in</button></p>
+ </div>
+</div>
+<div class="card hidden" id="portal-area" style="margin-top:20px">
+ <h3>Signed in as <span id="p-who"></span></h3>
+ <div id="p-delivs" style="margin-top:12px"></div>
+ <p style="margin-top:16px"><button class="btn ghost" id="p-out">Sign out</button></p>
+</div>
+</div></section>
+<footer><div class="wrap"><p>Jarvis Enterprises · <a href="/privacy.html">Privacy</a> · <a href="/impressum.html">Impressum</a></p></div></footer>
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const msg = (t, bad) => { $("#portal-msg").innerHTML = '<div class="banner ' + (bad ? "red" : "blue") + '" style="margin-bottom:14px">' + t + "</div>"; };
+async function call(p, body){ const r = await fetch(p, body ? {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)} : {}); return {s:r.status, j: await r.json().catch(()=>({}))}; }
+async function me(){
+  const r = await call("/portal/me");
+  if (r.s === 200 && r.j.email){ show(r.j); return true; }
+  if (r.s === 503) msg("Client storage is not enabled on this deployment yet — email the founder to be onboarded; enabling is a one-click setting.", true);
+  return false;
+}
+function show(j){
+  $("#portal-auth").classList.add("hidden");
+  $("#portal-area").classList.remove("hidden");
+  $("#p-who").textContent = j.email;
+  $("#p-delivs").innerHTML = (j.deliverables && j.deliverables.length)
+    ? j.deliverables.map(d => '<div class="kv"><span>' + d.name + "</span><b>" + d.date + "</b></div>").join("")
+    : '<p class="fine">No deliverables uploaded yet — your first report will appear here after onboarding.</p>';
+}
+$("#p-login").addEventListener("click", async () => {
+  const r = await call("/portal/login", {email: $("#p-email").value.trim(), password: $("#p-pass").value});
+  if (r.s === 200) { msg("Signed in."); show(r.j); }
+  else if (r.s === 503) msg(r.j.error === "storage_not_enabled" ? "Client storage is not enabled on this deployment yet — email the founder to be onboarded." : "Unavailable.", true);
+  else msg(r.j.error || "Sign-in failed.", true);
+});
+$("#p-out").addEventListener("click", async () => { await call("/portal/logout"); location.reload(); });
+me();
+</script>
+</body></html>

@@ -26,6 +26,7 @@ Cloudflare Pages settings:
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import time
 from pathlib import Path
@@ -305,13 +306,105 @@ footer p{font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(
 """
 
 
+SITE_CSS = """
+:root{--paper:#F2EEE7;--paper2:#EAE4D9;--card:#FBFAF7;--ink:#1E1B16;--ink2:#57503F;--taupe:#A99C86;
+--sand:#C9BFAF;--line:#DAD3C6;--sage:#6B8F71;--terra:#A4553F;
+--serif:'Cormorant Garamond','Iowan Old Style',Georgia,'Times New Roman',serif;
+--sans:system-ui,'Segoe UI',Roboto,sans-serif;--mono:ui-monospace,'Cascadia Mono',Consolas,monospace;
+--grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E")}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.65}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background:var(--grain),
+ linear-gradient(112deg,transparent 38%,rgba(255,255,255,.5) 45%,transparent 57%),
+ linear-gradient(112deg,transparent 64%,rgba(255,255,255,.38) 71%,transparent 83%)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 34px;position:relative}
+section{padding:56px 0}
+.eyebrow{font-size:10px;letter-spacing:.42em;text-transform:uppercase;color:var(--ink2)}
+.eyebrow.taupe{color:var(--taupe)}
+h1{font-family:var(--serif);font-weight:500;letter-spacing:.01em}
+h1 em,h3.serif{font-family:var(--serif);font-style:italic}
+.rule{width:44px;height:1px;background:var(--taupe);margin:22px 0}
+.btn{display:inline-block;background:var(--ink);color:var(--paper);padding:12px 24px;font-size:10px;
+ letter-spacing:.26em;text-transform:uppercase;text-decoration:none;border:0;cursor:pointer;border-radius:1px}
+.btn:hover{background:#3a352c}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink2)}
+.link{font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--taupe);padding-bottom:3px}
+header{padding:30px 0 0}
+.topbar{display:flex;justify-content:space-between;align-items:baseline;padding-bottom:34px}
+.brand{font-family:var(--serif);font-size:18px;letter-spacing:.4em}
+.topnav{display:flex;gap:22px;flex-wrap:wrap}
+.topnav a{font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink2);text-decoration:none}
+.topnav a:hover{color:var(--ink)}
+.products{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:24px}
+@media(max-width:900px){.products{grid-template-columns:1fr}}
+.pcard{background:var(--card);border:1px solid var(--line);padding:30px 28px;border-radius:2px}
+.pcard .n{font-family:var(--serif);font-style:italic;font-size:14px;color:var(--taupe)}
+.pcard h3{font-size:26px;line-height:1.12;margin:8px 0 10px;font-family:var(--serif);font-weight:500}
+.pcard p{font-size:13px;color:var(--ink2)}
+.pcard .price{font-family:var(--serif);font-size:30px;margin:6px 0 4px}
+.pcard .price span{font-family:var(--sans);font-size:11px;letter-spacing:.14em;color:var(--taupe)}
+.pcard ul{margin:14px 0 0;list-style:none}
+.pcard li{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);padding:7px 0;border-top:1px solid var(--line)}
+.index{margin-top:22px;border-top:1px solid var(--ink)}
+.index .row{display:grid;grid-template-columns:56px 1.4fr 2fr 80px;gap:16px;padding:16px 4px;border-bottom:1px solid var(--line);align-items:baseline}
+.index .u{font-family:var(--mono);font-size:11px;color:var(--taupe)}
+.index .nm{font-family:var(--serif);font-size:20px}
+.index .ds{font-size:12.5px;color:var(--ink2)}
+.index .ct{font-family:var(--mono);font-size:11px;text-align:right;color:var(--ink2)}
+.index .row:hover{background:rgba(169,156,134,.08)}
+@media(max-width:760px){.index .row{grid-template-columns:40px 1fr 60px}.index .ds{display:none}}
+.prose p{margin:0 0 16px;font-size:15px;color:var(--ink2);max-width:760px}
+.prose strong{color:var(--ink)}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink2)}
+.kv:last-child{border:0}.kv b{font-family:var(--mono);font-size:11.5px;color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:2px;padding:18px 20px}
+.card h3{font-size:13px;font-family:var(--serif);margin-bottom:8px}
+.calc{background:var(--card);border:1px solid var(--line);padding:26px;border-radius:2px}
+.calc input,.card input{font-family:var(--serif);font-size:20px;padding:8px 12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);outline:none;border-radius:1px}
+.calc input:focus,.card input:focus{border-color:var(--ink)}
+.fine{font-size:11.5px;color:var(--taupe);margin-top:16px}
+.banner{border-radius:2px;padding:12px 16px;font-size:13px;border:1px solid;line-height:1.55}
+.banner.red{background:#F6ECE8;border-color:var(--terra);color:#7C3A2D}
+.banner.blue{background:#EEF1EA;border-color:var(--sage);color:#3F5D44}
+.hidden{display:none!important}
+footer{padding:48px 0 56px;text-align:center}
+footer p,footer a{font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--taupe);text-decoration:none}
+a{color:#8A6A2F}
+::selection{background:var(--sand);color:var(--ink)}
+"""
+
 def build_landing() -> str:
     return (LANDING.replace("__MARBLE__", MARBLE)
                    .replace("__VESSEL__", VESSEL))
 
 
+SITE_BASE = os.environ.get("SITE_BASE", "https://jarvis-8wr.pages.dev")
+
+SITE_PAGES = ["index.html", "pricing.html", "journal.html", "journal/post-01.html",
+              "journal/post-02.html", "privacy.html", "impressum.html", "portal.html"]
+
+
 def main() -> int:
     DIST.mkdir(parents=True, exist_ok=True)
+    site = ROOT / "site"
+    if site.exists():
+        for f in site.rglob("*"):
+            if f.is_file():
+                dest = DIST / f.relative_to(site)
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(f, dest)
+    (DIST / "style.css").write_text(SITE_CSS, encoding="utf-8")
+    urls = "".join(
+        f"  <url><loc>{SITE_BASE}/{'index.html' if p == 'index.html' else p}"
+        f"</loc><changefreq>weekly</changefreq></url>\n"
+        for p in SITE_PAGES if p != "index.html")
+    (DIST / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f'  <url><loc>{SITE_BASE}/</loc><changefreq>weekly</changefreq></url>\n'
+        + urls + "</urlset>\n", encoding="utf-8")
+    (DIST / "robots.txt").write_text(
+        f"User-agent: *\nAllow: /\nSitemap: {SITE_BASE}/sitemap.xml\n", encoding="utf-8")
     (DIST / "index.html").write_text(build_landing(), encoding="utf-8")
     print(f"dist/ built at {time.strftime('%Y-%m-%d %H:%M:%S')}:")
     for p in sorted(DIST.iterdir()):

@@ -25,7 +25,7 @@ export async function onRequestPost(context){
   try {
     const answer = gen.text;
     if (!answer) throw new Error("empty");
-    return json({ok: true, answer: String(answer).trim(), provider: gen.provider, chain: (url && url.searchParams && url.searchParams.get("debug")) ? gen.chainErrs : undefined, reasoning: ["retrieved conversation context from the client session", "grounded the reply in the founder-approved fact sheet", "self-checked for unsupported claims before answering"]});
+    return json({ok: true, answer: String(answer).trim(), provider: gen.provider, chain: (url && url.searchParams && url.searchParams.get("debug")) ? {workers_ai: gen.chainErrs, openrouter: gen.orErrs} : undefined, reasoning: ["retrieved conversation context from the client session", "grounded the reply in the founder-approved fact sheet", "self-checked for unsupported claims before answering"]});
   } catch (e) {
     return json({error: "model_error", detail: String(e).slice(0, 200), chain: errs, fallback: "knowledge-base"}, 503);
   }

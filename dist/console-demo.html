@@ -6,85 +6,111 @@
 <title>JARVIS · Control Plane</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <style>
-:root{--bg:#080b10;--panel:#0e141d;--panel2:#141c28;--line:#1f2a3a;--au:#d4a24c;--au2:#8a6a2f;
---tx:#dce6f5;--dim:#7c8ba3;--gr:#3ddc97;--rd:#ff6b6b;--yl:#ffd166;--cy:#5bc8e8;
---mono:ui-monospace,'Cascadia Mono',Consolas,monospace;--sans:system-ui,'Segoe UI',Roboto,sans-serif}
+:root{--paper:#F2EEE7;--paper2:#EAE4D9;--card:#FBFAF7;--ink:#1E1B16;--ink2:#57503F;
+--taupe:#A99C86;--sand:#C9BFAF;--line:#DAD3C6;--sage:#6B8F71;--terra:#A4553F;--ochre:#B98A2E;
+--serif:'Cormorant Garamond','Iowan Old Style',Georgia,'Times New Roman',serif;
+--sans:system-ui,'Segoe UI',Roboto,sans-serif;
+--mono:ui-monospace,'Cascadia Mono',Consolas,monospace;
+--grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E")}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--tx);font-family:var(--sans);min-height:100vh}
-body::before{content:"";position:fixed;inset:0;pointer-events:none;
- background:radial-gradient(800px 380px at 75% -10%,rgba(212,162,76,.07),transparent 60%)}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;font-size:14px}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:
+ var(--grain),
+ linear-gradient(112deg,transparent 40%,rgba(255,255,255,.55) 46%,transparent 56%),
+ linear-gradient(112deg,transparent 66%,rgba(255,255,255,.4) 72%,transparent 82%)}
 #layout{display:flex;min-height:100vh;position:relative;z-index:1}
-nav{width:225px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line);
- padding:20px 12px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px}
-.logo{font-family:var(--mono);font-size:16px;letter-spacing:3px;color:var(--au);padding:0 10px 16px;font-weight:700}
-.logo small{display:block;color:var(--dim);font-size:10px;letter-spacing:2px;margin-top:3px}
-nav button{all:unset;cursor:pointer;padding:10px 12px;border-radius:9px;color:var(--dim);font-size:13.5px;display:flex;gap:9px;transition:.15s}
-nav button:hover{background:var(--panel2);color:var(--tx)}
-nav button.on{background:linear-gradient(90deg,rgba(212,162,76,.15),transparent);color:var(--au);box-shadow:inset 2px 0 0 var(--au)}
-.mode{margin-top:auto;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-family:var(--mono);font-size:11px;letter-spacing:1px}
-.mode.dry{color:var(--cy)}.mode.live{color:var(--rd);border-color:rgba(255,107,107,.5)}
-main{flex:1;padding:28px 32px 70px;max-width:1120px}
-h1{font-family:var(--mono);font-size:19px;letter-spacing:2px;margin-bottom:3px}
-h1 .tag{color:var(--au)}
-.sub{color:var(--dim);font-size:13px;margin-bottom:22px}
-h2{font-family:var(--mono);font-size:12px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin:24px 0 10px}
-.grid{display:grid;gap:13px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
-@media(max-width:900px){.g2,.g3,.g4{grid-template-columns:1fr}}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:16px 18px}
-.card h3{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:10px;display:flex;justify-content:space-between}
-.big{font-size:24px;font-weight:700;font-family:var(--mono)}
-.ok{color:var(--gr)}.bad{color:var(--rd)}.warn{color:var(--yl)}.info{color:var(--cy)}.gold{color:var(--au)}
-.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:10.5px;font-family:var(--mono);letter-spacing:1px;border:1px solid}
-.pill.ok{border-color:rgba(61,220,151,.4);background:rgba(61,220,151,.07)}
-.pill.bad{border-color:rgba(255,107,107,.4);background:rgba(255,107,107,.07)}
-.pill.warn{border-color:rgba(255,209,102,.4);background:rgba(255,209,102,.07)}
+nav{width:236px;flex-shrink:0;background:var(--paper2);border-right:1px solid var(--line);
+ padding:26px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:2px}
+.logo{font-family:var(--serif);font-size:17px;letter-spacing:.42em;color:var(--ink);padding:0 10px 4px;font-weight:600}
+.logo small{display:block;font-family:var(--sans);color:var(--taupe);font-size:8.5px;letter-spacing:.34em;margin-top:5px}
+nav button{all:unset;cursor:pointer;padding:9px 12px;color:var(--ink2);font-size:10.5px;letter-spacing:.22em;
+ text-transform:uppercase;display:flex;gap:10px;align-items:baseline;transition:.15s;border-left:1px solid transparent}
+nav button .no{font-family:var(--mono);font-size:9px;color:var(--taupe);letter-spacing:.1em}
+nav button:hover{color:var(--ink);background:rgba(255,255,255,.5)}
+nav button.on{background:var(--ink);color:var(--paper);border-left:1px solid var(--ink)}
+nav button.on .no{color:var(--sand)}
+.mode{margin-top:auto;padding:9px 12px;border:1px solid var(--line);background:var(--card);
+ font-family:var(--mono);font-size:9.5px;letter-spacing:.24em;text-align:center}
+.mode.dry{color:var(--ink2)}.mode.live{color:var(--terra);border-color:var(--terra)}
+main{flex:1;padding:34px 38px 80px;max-width:1140px}
+h1{font-family:var(--serif);font-size:31px;font-weight:600;letter-spacing:.01em;margin-bottom:6px}
+h1 .tag{font-family:var(--serif);font-style:italic;font-size:17px;color:var(--taupe);letter-spacing:0}
+.sub{color:var(--ink2);font-size:13px;margin-bottom:26px;max-width:760px;line-height:1.6}
+h2{font-size:10px;letter-spacing:.3em;color:var(--taupe);text-transform:uppercase;margin:28px 0 12px;
+ padding-top:14px;border-top:1px solid var(--line)}
+.grid{display:grid;gap:14px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:960px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}@media(max-width:640px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:2px;padding:18px 20px;
+ box-shadow:0 1px 0 rgba(30,27,22,.05)}
+.card h3{font-size:9.5px;letter-spacing:.28em;color:var(--taupe);text-transform:uppercase;margin-bottom:12px;
+ display:flex;justify-content:space-between;align-items:center;gap:8px}
+.big{font-family:var(--serif);font-size:30px;font-weight:600;line-height:1.1}
+.ok{color:var(--sage)}.bad{color:var(--terra)}.warn{color:var(--ochre)}.info{color:#4E718B}.gold{color:#8A6A2F}
+.dim{color:#8B8272}.note{font-size:12px;color:var(--ink2);line-height:1.55}
+.pill{display:inline-block;padding:2px 8px;font-size:9px;font-family:var(--sans);letter-spacing:.18em;
+ text-transform:uppercase;border:1px solid var(--line);border-radius:1px;background:var(--paper)}
+.pill.ok{border-color:var(--sage);color:var(--sage)}
+.pill.bad{border-color:var(--terra);color:var(--terra)}
+.pill.warn{border-color:var(--ochre);color:var(--ochre)}
 table{width:100%;border-collapse:collapse;font-size:12.5px}
-th{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);text-align:left;padding:7px 9px;border-bottom:1px solid var(--line)}
-td{padding:7px 9px;border-bottom:1px solid rgba(31,42,58,.55);vertical-align:top}
-td.num,th.num{text-align:right;font-family:var(--mono)}
-.scroll{overflow:auto;max-height:400px}
-pre{font-family:var(--mono);font-size:11.5px;line-height:1.55;color:#b9c7da;white-space:pre-wrap}
-.btn{all:unset;cursor:pointer;background:linear-gradient(135deg,var(--au2),#5c451d);color:#ffe9c2;padding:8px 15px;border-radius:8px;font-size:12.5px;font-weight:600;transition:.15s}
-.btn:hover{filter:brightness(1.25)}
-.btn.red{background:linear-gradient(135deg,#7a2c2c,#4a1a1a);color:#ffd7d7}
-.btn.ghost{background:var(--panel2);border:1px solid var(--line);color:var(--dim)}
-input{background:var(--panel2);border:1px solid var(--line);color:var(--tx);padding:8px 10px;border-radius:8px;font-size:13px;outline:none}
-input:focus{border-color:var(--au)}
-.kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed rgba(31,42,58,.6);font-size:13px}
-.kv:last-child{border:0}
-.kv b{font-family:var(--mono)}
-details{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:8px;background:var(--panel)}
-summary{cursor:pointer;font-family:var(--mono);font-size:12.5px;letter-spacing:1px;color:var(--au)}
-details ul{margin:10px 0 4px 18px;font-size:12.5px;color:var(--dim);line-height:1.8}
-.banner{border-radius:11px;padding:12px 16px;margin-bottom:14px;font-size:13.5px;border:1px solid}
-.banner.red{background:rgba(255,107,107,.07);border-color:rgba(255,107,107,.35);color:#ffc9c9}
-.banner.blue{background:rgba(91,200,232,.06);border-color:rgba(91,200,232,.3);color:#c9ecf7}
+th{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--taupe);text-align:left;
+ padding:8px 10px;border-bottom:1px solid var(--ink)}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink2)}
+tr:hover td{background:rgba(169,156,134,.07)}
+td.num,th.num{text-align:right;font-family:var(--mono);font-size:11.5px}
+.scroll{overflow:auto;max-height:420px}
+pre{font-family:var(--mono);font-size:11px;line-height:1.6;color:var(--ink2);white-space:pre-wrap;
+ background:var(--paper);border:1px solid var(--line);padding:12px;border-radius:2px}
+form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+label{display:block;font-size:9px;letter-spacing:.24em;color:var(--taupe);text-transform:uppercase;margin-bottom:5px}
+input,select{background:var(--card);border:1px solid var(--line);border-radius:2px;color:var(--ink);
+ padding:9px 11px;font-size:13px;font-family:var(--sans);outline:none;min-width:0}
+input:focus,select:focus{border-color:var(--ink)}
+.btn{all:unset;cursor:pointer;background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:1px;
+ font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;text-align:center;transition:.15s}
+.btn:hover{background:#3a352c}
+.btn.red{background:var(--terra);color:#FBF3EF}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink2)}
+.btn.ghost:hover{border-color:var(--ink);color:var(--ink)}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink2)}
+.kv:last-child{border-bottom:0}
+.kv b{font-family:var(--mono);font-size:11.5px;color:var(--ink)}
+details{border:1px solid var(--line);border-radius:2px;padding:12px 16px;margin-bottom:9px;background:var(--card)}
+summary{cursor:pointer;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink);font-family:var(--sans)}
+details ul{margin:10px 0 4px 18px;font-size:12.5px;color:var(--ink2);line-height:1.9}
+.banner{border-radius:2px;padding:13px 17px;margin-bottom:16px;font-size:13px;border:1px solid;line-height:1.55}
+.banner.red{background:#F6ECE8;border-color:var(--terra);color:#7C3A2D}
+.banner.green,.banner.blue{background:#EEF1EA;border-color:var(--sage);color:#3F5D44}
 .hidden{display:none!important}
-#toast{position:fixed;bottom:22px;right:22px;z-index:60;display:flex;flex-direction:column;gap:8px}
-.tmsg{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--au);padding:11px 15px;border-radius:9px;font-size:13px;max-width:360px;box-shadow:0 8px 26px rgba(0,0,0,.5)}
-.tmsg.bad{border-left-color:var(--rd)}.tmsg.ok{border-left-color:var(--gr)}
-footer{margin-top:44px;color:#39465c;font-size:11px;font-family:var(--mono);letter-spacing:1px}
-@media(max-width:760px){nav{width:60px;padding:14px 6px}nav button span.lbl,.logo small,.mode{display:none}main{padding:18px 14px 50px}}
-.demobar{position:fixed;top:0;left:0;right:0;z-index:99;background:linear-gradient(90deg,#7a2c2c,#4a1a1a);color:#ffd7d7;text-align:center;padding:7px 12px;font-family:var(--mono);font-size:11.5px;letter-spacing:1px}#layout{padding-top:34px}</style>
+#toast{position:fixed;bottom:24px;right:24px;z-index:60;display:flex;flex-direction:column;gap:8px}
+.tmsg{background:var(--ink);color:var(--paper);border-left:3px solid var(--taupe);padding:12px 16px;
+ border-radius:1px;font-size:12.5px;max-width:360px;box-shadow:0 10px 30px rgba(30,27,22,.25);letter-spacing:.03em}
+.tmsg.bad{border-left-color:var(--terra)}.tmsg.ok{border-left-color:var(--sage)}
+footer{margin-top:52px;color:var(--taupe);font-size:9.5px;letter-spacing:.26em;text-transform:uppercase}
+.mdtable td,.mdtable th{font-size:12px}
+a{color:#8A6A2F}
+@media(max-width:760px){nav{width:58px;padding:16px 6px}nav button span.lbl,nav .logo small,.mode{display:none}
+ nav button .no{width:auto}main{padding:20px 16px 60px}.logo{letter-spacing:.1em;font-size:14px}}
+.demobar{position:fixed;top:0;left:0;right:0;z-index:99;background:#1E1B16;color:#F2EEE7;text-align:center;padding:8px 12px;font-family:var(--sans);font-size:9.5px;letter-spacing:.28em;text-transform:uppercase}#layout{padding-top:36px}</style>
 </head>
 <body>
 <div class="demobar">STATIC DEMO — SYNTHETIC DATA ONLY · THE LIVE CONSOLE RUNS ON THE FOUNDER'S MACHINE AT localhost:8010</div>
 <div id="layout">
 <nav>
- <div class="logo">JARVIS<small>CONTROL PLANE</small></div>
- <button data-p="dash" class="on">📊 <span class="lbl">Dashboard</span></button>
- <button data-p="nexus">🛡 <span class="lbl">The Nexus</span></button>
- <button data-p="plans">🔀 <span class="lbl">Sweep Plans</span></button>
- <button data-p="ledger">📒 <span class="lbl">Ledger</span></button>
- <button data-p="comp">⚖ <span class="lbl">Compliance</span></button>
- <button data-p="log">📜 <span class="lbl">Audit Log</span></button>
- <button data-p="roster">🌌 <span class="lbl">Universes</span></button>
- <button data-p="auto">🤖 <span class="lbl">Automaton</span></button>
+ <div class="logo">JARVIS<small>CONTROL PLANE · MMXXVI</small></div>
+ <button data-p="dash" class="on"><span class="no">01</span><span class="lbl">Dashboard</span></button>
+ <button data-p="nexus"><span class="no">02</span><span class="lbl">The Nexus</span></button>
+ <button data-p="plans"><span class="no">03</span><span class="lbl">Sweep Plans</span></button>
+ <button data-p="ledger"><span class="no">04</span><span class="lbl">Ledger</span></button>
+ <button data-p="comp"><span class="no">05</span><span class="lbl">Compliance</span></button>
+ <button data-p="log"><span class="no">06</span><span class="lbl">Audit Log</span></button>
+ <button data-p="roster"><span class="no">07</span><span class="lbl">Universes</span></button>
+ <button data-p="auto"><span class="no">08</span><span class="lbl">Automaton</span></button>
  <div class="mode dry" id="mode-pill">DRY-RUN</div>
 </nav>
 <main>
 <section id="p-dash">
- <h1><span class="tag">◤</span> INVESTMENT AUTOMATON <span class="tag">◢</span></h1>
+ <h1>Investment Automaton <span class="tag">— sovereign capital engine</span></h1>
  <div class="sub" id="cfg-line"></div>
  <div id="live-warn"></div>
  <div class="grid g4">
@@ -100,7 +126,7 @@ footer{margin-top:44px;color:#39465c;font-size:11px;font-family:var(--mono);lett
 </section>
 
 <section id="p-nexus" class="hidden">
- <h1>🛡 THE NEXUS <span class="tag">// HUMAN GATE</span></h1>
+ <h1>The Nexus <span class="tag">— the human gate</span></h1>
  <div class="sub">No transfer, no order, no copy-trade executes without your explicit approval. Approving requires the exact phrase; rejecting requires a reason.</div>
  <div id="nx-pending"></div>
  <h2>Decision history</h2>
@@ -108,13 +134,13 @@ footer{margin-top:44px;color:#39465c;font-size:11px;font-family:var(--mono);lett
 </section>
 
 <section id="p-plans" class="hidden">
- <h1>🔀 SWEEP PLANS</h1>
+ <h1>Sweep Plans</h1>
  <div class="sub">Output of cashflow_bridge.py — 30% of net profit, routed 40/60 to Pillar 3a / IBKR. Zero or negative months route nothing.</div>
  <div id="pl-body"></div>
 </section>
 
 <section id="p-ledger" class="hidden">
- <h1>📒 FIFO LEDGER</h1>
+ <h1>FIFO Ledger</h1>
  <div class="sub">Open lots (holding-period tracker) and recorded fills.</div>
  <h2>Open lots</h2>
  <div class="card"><div class="scroll"><table><thead><tr><th>Ticker</th><th class="num">Qty</th><th>Opened</th><th class="num">Age (d)</th></tr></thead><tbody id="ld-lots"></tbody></table></div></div>
@@ -123,7 +149,7 @@ footer{margin-top:44px;color:#39465c;font-size:11px;font-family:var(--mono);lett
 </section>
 
 <section id="p-comp" class="hidden">
- <h1>⚖ SWISS COMPLIANCE GUARD</h1>
+ <h1>Swiss Compliance Guard</h1>
  <div class="sub">Rule owners: Tax Advisor + Regulatory Compliance Officer (Capital &amp; Compliance Universe). Not tax advice — thresholds require advisor sign-off.</div>
  <div class="grid g2"><div class="card"><h3>Enforced limits</h3><div id="cp-limits"></div></div>
  <div class="card"><h3>Portfolio health</h3><div id="cp-health"></div></div></div>
@@ -132,19 +158,19 @@ footer{margin-top:44px;color:#39465c;font-size:11px;font-family:var(--mono);lett
 </section>
 
 <section id="p-log" class="hidden">
- <h1>📜 AUDIT LOG <span class="tag">// investment_log.txt</span></h1>
+ <h1>Audit Log <span class="tag">— investment_log.txt</span></h1>
  <div class="sub">Every sweep, gate decision, compliance verdict and fill. Reviewed by the Auditing Agent.</div>
  <div class="card"><pre id="lg-body"></pre></div>
  <div style="margin-top:12px"><button class="btn ghost" id="lg-refresh">↻ Refresh</button></div>
 </section>
 
 <section id="p-roster" class="hidden">
- <h1>🌌 THE 7 UNIVERSES <span class="tag">// 110 SPECIALISTS</span></h1>
+ <h1>The Seven Universes <span class="tag">— one hundred ten specialists</span></h1>
  <div class="sub">Modular hierarchy of the agent-run business. Each agent belongs to exactly one universe; category groups feed universes as blocks, Specialized Roles per-agent.</div>
  <div id="rs-body"></div>
 </section>
 <section id="p-auto" class="hidden">
- <h1>🤖 CENTRAL AUTOMATON <span class="tag">// BOUNDED AUTONOMY</span></h1>
+ <h1>Central Automaton <span class="tag">— bounded autonomy</span></h1>
  <div class="sub">Perceive → propose → (your approval) → execute. Replication is Nexus-gated; the kill switch stops everything.</div>
  <div id="au-halt-warn"></div>
  <div class="grid g4">

@@ -1,113 +1,178 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>JARVIS — Sovereign AI Enterprise</title>
-<meta name="description" content="A lean, tech-enabled Swiss solo enterprise: 110 specialist AI agents in seven universes, a Nexus-gated central automaton, and a compliance-bound Investment Automaton.">
+<title>JARVIS — The Sovereign AI Enterprise</title>
+<meta name="description" content="A lean Swiss solo enterprise: 110 specialist agents in seven universes, a Nexus-gated central automaton, and a compliance-bound Investment Automaton.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#07090d;--panel:#0d1219;--line:#1d2735;--au:#d4a24c;--tx:#dfe8f4;--dim:#8494ab;
---mono:ui-monospace,'Cascadia Mono',Consolas,monospace;--sans:system-ui,'Segoe UI',Roboto,sans-serif}
-*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);color:var(--tx);font-family:var(--sans);line-height:1.65}
-body::before{content:"";position:fixed;inset:0;pointer-events:none;background:
- radial-gradient(1000px 480px at 70% -12%,rgba(212,162,76,.09),transparent 60%),
- radial-gradient(800px 420px at -10% 110%,rgba(91,200,232,.06),transparent 60%)}
-.wrap{max-width:1020px;margin:0 auto;padding:0 26px;position:relative;z-index:1}
-header{padding:80px 0 30px;text-align:center}
-.brand{font-family:var(--mono);letter-spacing:8px;font-size:15px;color:var(--au)}
-h1{font-size:clamp(30px,5vw,52px);line-height:1.12;margin:18px 0 10px;font-weight:800}
-h1 em{color:var(--au);font-style:normal}
-.tag{color:var(--dim);font-size:17px;max-width:760px;margin:0 auto}
-.cta{margin:30px 0 10px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
-.btn{display:inline-block;padding:13px 26px;border-radius:11px;font-weight:700;font-size:15px;text-decoration:none;transition:.15s}
-.btn.gold{background:linear-gradient(135deg,#8a6a2f,#5c451d);color:#ffe9c2;box-shadow:0 4px 22px rgba(212,162,76,.25)}
-.btn.ghost{border:1px solid var(--line);color:var(--dim)}
-.btn:hover{filter:brightness(1.2);transform:translateY(-1px)}
-section{padding:52px 0}
-h2{font-family:var(--mono);font-size:13px;letter-spacing:4px;color:var(--au);text-transform:uppercase;margin-bottom:20px}
-p.lede{font-size:16.5px;color:#c3cfdf;max-width:880px}
-.grid{display:grid;gap:16px;margin-top:22px}.g2{grid-template-columns:1fr 1fr}.g4{grid-template-columns:repeat(4,1fr)}
-@media(max-width:860px){.g2,.g4{grid-template-columns:1fr 1fr}}@media(max-width:560px){.g2,.g4{grid-template-columns:1fr}}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
-.card h3{font-size:16px;margin-bottom:8px}.card h3 span{color:var(--au)}
-.card p{font-size:13.5px;color:var(--dim)}
-.uni{font-family:var(--mono);font-size:12px;letter-spacing:1px;color:var(--dim);padding:12px 14px;border:1px solid var(--line);border-radius:10px;text-align:center}
-.uni b{display:block;color:var(--au);font-size:13px;margin-bottom:4px}
-.quote{border-left:3px solid var(--au);padding:6px 0 6px 20px;margin:26px 0;color:#c9d4e2;font-size:15.5px;font-style:italic}
-footer{padding:44px 0 60px;color:#4a5870;font-size:12px;font-family:var(--mono);letter-spacing:1px;text-align:center}
-.kv{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed rgba(29,39,53,.9);font-size:13.5px}
-.kv b{font-family:var(--mono);color:var(--au)}
+:root{--paper:#F2EEE7;--paper2:#EAE4D9;--card:#FBFAF7;--ink:#1E1B16;--ink2:#57503F;--taupe:#A99C86;
+--sand:#C9BFAF;--line:#DAD3C6;--serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+--sans:system-ui,'Segoe UI',Roboto,sans-serif;
+--grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E")}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.65}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background:var(--grain),
+ linear-gradient(112deg,transparent 38%,rgba(255,255,255,.5) 45%,transparent 57%),
+ linear-gradient(112deg,transparent 64%,rgba(255,255,255,.38) 71%,transparent 83%)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 34px;position:relative}
+.eyebrow{font-size:10px;letter-spacing:.42em;text-transform:uppercase;color:var(--ink2)}
+.eyebrow.taupe{color:var(--taupe)}
+h1,h2,h3.serif{font-family:var(--serif);font-weight:500}
+.rule{width:44px;height:1px;background:var(--taupe);margin:26px 0}
+.btn{display:inline-block;background:var(--ink);color:var(--paper);padding:13px 26px;font-size:10px;
+ letter-spacing:.26em;text-transform:uppercase;text-decoration:none;border:0;cursor:pointer;border-radius:1px}
+.btn:hover{background:#3a352c}
+.link{font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--taupe);padding-bottom:3px}
+header{padding:34px 0 0}
+.topbar{display:flex;justify-content:space-between;align-items:baseline;padding-bottom:70px}
+.brand{font-family:var(--serif);font-size:19px;letter-spacing:.4em}
+.topnav{display:flex;gap:26px}
+.topnav a{font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink2);text-decoration:none}
+.topnav a:hover{color:var(--ink)}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:60px;align-items:start;padding-bottom:90px;position:relative}
+.hero h1{font-size:clamp(52px,7.4vw,96px);line-height:.98;letter-spacing:-.01em;margin:20px 0 0}
+.hero h1 em{font-style:italic;color:var(--taupe)}
+.lede{margin-top:26px;max-width:430px;color:var(--ink2);font-size:14.5px}
+.plate{position:relative}
+.plate .img{width:100%;aspect-ratio:4/5;background:var(--marble) center/cover;border:1px solid var(--line)}
+.plate .cap{position:absolute;top:34px;left:-56px;background:var(--card);border:1px solid var(--line);
+ padding:30px 30px 26px;max-width:270px;box-shadow:0 18px 44px rgba(30,27,22,.10)}
+.plate .cap h3{font-family:var(--serif);font-size:31px;line-height:1.08;margin:10px 0 12px;font-weight:500}
+.plate .cap p{font-size:12px;color:var(--ink2);margin-bottom:16px}
+.swatches{position:absolute;right:-64px;top:6px;display:flex;flex-direction:column;gap:14px}
+.swatches i{width:64px;height:74px;display:block}
+@media(max-width:1080px){.swatches{display:none}.plate .cap{left:-14px}}
+@media(max-width:860px){.hero{grid-template-columns:1fr;gap:44px}.topnav{display:none}}
+section{padding:70px 0}
+.approach{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:center}
+.approach h2{font-size:clamp(34px,4vw,50px);line-height:1.05;margin:14px 0 18px}
+.approach p{color:var(--ink2);font-size:14.5px;max-width:400px}
+.approach .img{width:100%;aspect-ratio:1/1;background:var(--vessel) center/cover;border:1px solid var(--line)}
+@media(max-width:860px){.approach{grid-template-columns:1fr}}
+.features{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--ink);margin-top:64px}
+.features div{padding:30px 26px 6px;border-right:1px solid var(--line)}
+.features div:last-child{border-right:0}
+.features h4{font-size:10px;letter-spacing:.26em;text-transform:uppercase;margin:16px 0 10px}
+.features p{font-size:12.5px;color:var(--ink2)}
+@media(max-width:760px){.features{grid-template-columns:1fr}.features div{border-right:0;border-bottom:1px solid var(--line)}}
+.products{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:26px}
+.pcard{background:var(--card);border:1px solid var(--line);padding:34px 32px}
+.pcard .n{font-family:var(--serif);font-style:italic;font-size:15px;color:var(--taupe)}
+.pcard h3{font-size:29px;line-height:1.12;margin:8px 0 12px}
+.pcard p{font-size:13.5px;color:var(--ink2)}
+.pcard ul{margin:16px 0 0;list-style:none}
+.pcard li{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);
+ padding:8px 0;border-top:1px solid var(--line)}
+@media(max-width:860px){.products{grid-template-columns:1fr}}
+.index{margin-top:26px;border-top:1px solid var(--ink)}
+.index .row{display:grid;grid-template-columns:64px 1.1fr 2fr 90px;gap:18px;padding:15px 4px;
+ border-bottom:1px solid var(--line);align-items:baseline}
+.index .u{font-family:var(--mono);font-size:11px;color:var(--taupe);letter-spacing:.1em}
+.index .nm{font-family:var(--serif);font-size:21px}
+.index .ds{font-size:12.5px;color:var(--ink2)}
+.index .ct{font-family:var(--mono);font-size:11px;text-align:right;color:var(--ink2)}
+@media(max-width:760px){.index .row{grid-template-columns:44px 1fr 70px}.index .ds{display:none}}
+.gov{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:start}
+.quote{font-family:var(--serif);font-style:italic;font-size:clamp(24px,2.6vw,33px);line-height:1.32;color:var(--ink)}
+.quote .att{display:block;margin-top:20px;font-family:var(--sans);font-style:normal;font-size:10px;
+ letter-spacing:.3em;text-transform:uppercase;color:var(--taupe)}
+.trust{background:var(--card);border:1px solid var(--line);padding:30px 30px 12px}
+.trust h3{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--taupe);margin-bottom:14px}
+.kv{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink2)}
+.kv:last-child{border:0}.kv b{font-family:var(--serif);font-size:16px;color:var(--ink)}
+@media(max-width:860px){.gov{grid-template-columns:1fr}}
+footer{padding:54px 0 64px;text-align:center}
+footer p{font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--taupe)}
 </style></head><body>
 <header><div class="wrap">
- <div class="brand">⚡ J A R V I S</div>
- <h1>The sovereign AI enterprise<br>where <em>every action answers to you</em></h1>
- <p class="tag">A lean, tech-enabled Swiss solo enterprise — 110 specialist agents,
- seven universes, one human gate.</p>
- <div class="cta">
-  <a class="btn gold" href="console-demo.html">Explore the control plane (demo)</a>
-  <a class="btn ghost" href="https://github.com/kaledbouchagraoui7-bot/Jarvis">View the system</a>
+ <div class="topbar"><div class="brand">J A R V I S</div>
+  <nav class="topnav"><a href="#approach">Approach</a><a href="#products">Products</a>
+  <a href="#universes">Universes</a><a href="#governance">Governance</a>
+  <a href="console-demo.html">Control plane</a></nav></div>
+ <div class="hero">
+  <div>
+   <div class="eyebrow">What makes an enterprise sovereign</div>
+   <h1>Machine<br>scale.<br><em>Human consent.</em></h1>
+   <div class="rule"></div>
+   <p class="lede">A lean Swiss solo enterprise where 110 specialist agents manufacture
+   B2B deliverables at compute cost — and every franc, order and new machine
+   instance waits for one keystroke: yours.</p>
+   <div style="margin-top:30px"><a class="btn" href="console-demo.html">Enter the control plane</a></div>
+  </div>
+  <div class="plate">
+   <div class="img" style="background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='800'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.06' numOctaves='4' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.66 0 0 0 0 0.60 0 0 0 0 0.50 0 0 0 0.85 0'/%3E%3C/filter%3E%3Crect width='640' height='800' fill='%23ECE6DC'/%3E%3Crect width='640' height='800' filter='url(%23m)' opacity='0.5'/%3E%3Cpath d='M60 640 C 220 520 340 700 580 560' stroke='%23FBFAF7' stroke-width='2.5' fill='none' opacity='0.65'/%3E%3Cpath d='M90 180 C 260 240 420 120 600 210' stroke='%23C9BFAF' stroke-width='1.5' fill='none' opacity='0.6'/%3E%3C/svg%3E")"></div>
+   <div class="cap"><div class="eyebrow taupe">The system</div>
+    <h3>Bounded<br>autonomy.</h3>
+    <p>We build automation that not only works alone, but knows exactly where
+    its authority ends.</p>
+    <a class="link" href="#governance">Learn more →</a></div>
+   <div class="swatches"><i style="background:#EDE9E1"></i><i style="background:#C9BFAF"></i>
+    <i style="background:#A99C86"></i><i style="background:#1E1B16"></i></div>
+  </div>
  </div>
 </div></header>
-<section><div class="wrap">
- <h2>The enterprise</h2>
- <p class="lede">JARVIS arbitrages the gap between the micro-cost of AI compute and the
- market value of B2B digital deliverables: instead of selling human hours, it manufactures
- two product lines at scale — hyper-personalized B2B lead enrichment (scraped, validated
- decision-maker data plus LLM-written outreach tailored to each prospect) and programmatic
- SEO (autonomously built, long-tail landing pages fed by live data streams) — produced by a
- self-orchestrating workforce of 110 specialist AI agents organized in a seven-universe
- modular hierarchy under a central automaton that perceives, proposes and replicates only
- within hard budgets. Launched with zero capital on open-source automation and an automated
- outbound sales engine that converts retainer clients, the company reinvests a fixed share
- of every month's net profit through a compliance-gated Investment Automaton (Pillar 3a +
- IBKR ETF dollar-cost averaging under Swiss private-investor guardrails), marching from
- bootstrap to sovereignty — cloud tools first, owned local hardware last — while every
- external, financial or high-stakes action, including each act of machine self-replication,
- passes through <b>The Nexus</b>: a human-in-the-loop gate where the founder's keystroke is
- the only key that turns automation into action.</p>
+<section id="approach"><div class="wrap">
+ <div class="approach">
+  <div><div class="eyebrow taupe">Our approach</div>
+   <h2>Strategy meets<br>sovereignty.</h2>
+   <p>We design enterprises that not only run themselves, but are built to
+   stay owned — bootstrap first, sovereign hardware last, human authority
+   always.</p>
+   <div style="margin-top:22px"><a class="link" href="#universes">The hierarchy →</a></div></div>
+  <div class="img" style="background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='640'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.02 0.045' numOctaves='4' seed='13'/%3E%3CfeColorMatrix values='0 0 0 0 0.70 0 0 0 0 0.64 0 0 0 0 0.55 0 0 0 0.8 0'/%3E%3C/filter%3E%3Crect width='640' height='640' fill='%23E9E2D7'/%3E%3Crect width='640' height='640' filter='url(%23m)' opacity='0.45'/%3E%3Cellipse cx='320' cy='500' rx='180' ry='26' fill='%23C9BFAF' opacity='0.5'/%3E%3Ccircle cx='320' cy='360' r='130' fill='%23D9D1C3'/%3E%3Ccircle cx='285' cy='325' r='95' fill='%23E4DDD1'/%3E%3Crect x='300' y='200' width='40' height='60' rx='14' fill='%23CFC6B6'/%3E%3C/svg%3E")"></div>
+ </div>
+ <div class="features">
+  <div><svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#1E1B16"><rect x="3" y="4" width="20" height="13"/><path d="M13 17v5M8 22h10"/></svg>
+   <h4>Human gate</h4><p>Every external, financial or high-stakes action — including each act of
+   machine self-replication — passes through The Nexus: one human, one keystroke.</p></div>
+  <div><svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#1E1B16"><rect x="4" y="4" width="7" height="7"/><rect x="15" y="4" width="7" height="7"/><rect x="4" y="15" width="7" height="7"/><rect x="15" y="15" width="7" height="7"/></svg>
+   <h4>Bounded autonomy</h4><p>The central automaton perceives, proposes and replicates inside hard
+   budgets — cycles, proposals, workers — and freezes on a single kill switch.</p></div>
+  <div><svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#1E1B16"><path d="M5 21V11M12 21V4M19 21v-7"/></svg>
+   <h4>Compounded capital</h4><p>A fixed share of every month's profit sweeps into Pillar 3a and
+   ETF dollar-cost averaging under Swiss private-investor guardrails.</p></div>
+ </div>
 </div></section>
-<section><div class="wrap">
- <h2>Product lines</h2>
- <div class="grid g2">
-  <div class="card"><h3><span>01 ·</span> Hyper-Personalized B2B Lead Enrichment</h3>
-   <p>Decision-maker data scraped, validated and enriched at machine cost, then turned into
-   outreach copy written per-prospect by LLMs — delivered as retainer subscriptions.</p></div>
-  <div class="card"><h3><span>02 ·</span> Programmatic SEO at Scale</h3>
+<section id="products" style="background:var(--paper2)"><div class="wrap">
+ <div class="eyebrow taupe">Product lines</div>
+ <div class="products">
+  <div class="pcard"><div class="n">No. 01</div><h3 class="serif">Hyper-personalized B2B lead enrichment</h3>
+   <p>Decision-maker data scraped, validated and enriched at machine cost, then turned
+   into outreach written for one person at a time — sold as retainer subscriptions.</p>
+   <ul><li>Validated decision-maker data</li><li>LLM outreach, per prospect</li><li>Retainer delivery</li></ul></div>
+  <div class="pcard"><div class="n">No. 02</div><h3 class="serif">Programmatic SEO at scale</h3>
    <p>Live data streams ingested and transformed into long-tail landing pages that rank —
-   hundreds of pages per client, built and refreshed autonomously.</p></div>
+   hundreds per client, built and refreshed autonomously.</p>
+   <ul><li>Data-stream ingestion</li><li>Long-tail page generation</li><li>Autonomous refresh</li></ul></div>
  </div>
 </div></section>
-<section><div class="wrap">
- <h2>The seven universes · 110 specialists</h2>
- <div class="grid g4">
-  <div class="uni"><b>U1 REVENUE</b>24 agents · demand & customers</div>
-  <div class="uni"><b>U2 DELIVERY</b>23 agents · ops & product</div>
-  <div class="uni"><b>U3 CAPITAL</b>21 agents · finance & compliance</div>
-  <div class="uni"><b>U4 PEOPLE</b>10 agents · culture & growth</div>
-  <div class="uni"><b>U5 INFRA</b>10 agents · tech & security</div>
-  <div class="uni"><b>U6 STRATEGY</b>11 agents · direction & intel</div>
-  <div class="uni"><b>U7 CONTINUITY</b>11 agents · admin & knowledge</div>
-  <div class="uni"><b>THE NEXUS</b>1 human · final authority</div>
+<section id="universes"><div class="wrap">
+ <div class="eyebrow taupe">The modular hierarchy</div>
+ <div class="index">
+  <div class="row"><span class="u">U1</span><span class="nm">Revenue</span><span class="ds">Demand, customers, market presence</span><span class="ct">24 agents</span></div>
+  <div class="row"><span class="u">U2</span><span class="nm">Delivery</span><span class="ds">Operations, logistics, product</span><span class="ct">23 agents</span></div>
+  <div class="row"><span class="u">U3</span><span class="nm">Capital &amp; Compliance</span><span class="ds">Finance, tax, legal — owns the Automaton's rules</span><span class="ct">21 agents</span></div>
+  <div class="row"><span class="u">U4</span><span class="nm">People</span><span class="ds">Hiring, growth, culture</span><span class="ct">10 agents</span></div>
+  <div class="row"><span class="u">U5</span><span class="nm">Infrastructure</span><span class="ds">Technology, data, security</span><span class="ct">10 agents</span></div>
+  <div class="row"><span class="u">U6</span><span class="nm">Strategy</span><span class="ds">Direction, intelligence, scenarios</span><span class="ct">11 agents</span></div>
+  <div class="row"><span class="u">U7</span><span class="nm">Continuity</span><span class="ds">Administration, knowledge, crisis</span><span class="ct">11 agents</span></div>
  </div>
 </div></section>
-<section><div class="wrap">
- <h2>Governance by design</h2>
- <div class="grid g2">
-  <div class="card"><h3><span>◈</span> Bounded autonomy</h3>
-   <p>The central automaton perceives, proposes and replicates within hard budgets —
-   cycles per day, proposals per cycle, concurrent workers — and freezes instantly on
-   the kill switch.</p>
-   <div class="kv"><span>Max cycles / day</span><b>48</b></div>
-   <div class="kv"><span>Max proposals / cycle</span><b>6</b></div>
-   <div class="kv"><span>Replication depth</span><b>1 (Core → worker)</b></div></div>
-  <div class="card"><h3><span>◈</span> Swiss private-investor guardrail</h3>
-   <p>The Investment Automaton sweeps a fixed share of net profit into Pillar 3a and
-   ETF dollar-cost averaging under hard-coded limits.</p>
-   <div class="kv"><span>Min holding period</span><b>180 days</b></div>
+<section id="governance" style="background:var(--paper2)"><div class="wrap">
+ <div class="gov">
+  <div><div class="eyebrow taupe">Governance</div>
+   <div class="rule"></div>
+   <p class="quote">“The automaton may think, propose, replicate and audit freely — but every
+   franc, every order and every new instance of itself passes through a gate
+   only your keystroke can open.”<span class="att">— The Nexus principle</span></p></div>
+  <div class="trust"><h3>Details that build trust</h3>
+   <div class="kv"><span>Minimum holding period</span><b>180 days</b></div>
    <div class="kv"><span>Max annual turnover</span><b>5× assets</b></div>
-   <div class="kv"><span>Margin / derivatives / short</span><b>PROHIBITED</b></div></div>
+   <div class="kv"><span>Margin · derivatives · short</span><b>Prohibited</b></div>
+   <div class="kv"><span>Replication depth</span><b>Core → worker</b></div>
+   <div class="kv"><span>Actions requiring human approval</span><b>100%</b></div></div>
  </div>
- <div class="quote">"The automaton may think, propose, replicate and audit freely — but
- every franc, every order and every new instance of itself passes through a gate only
- your keystroke can open."</div>
 </div></section>
-<footer>JARVIS ENTERPRISES · ZÜRICH → GENÈVE · BOOTSTRAP → SOVEREIGNTY · NOT FINANCIAL ADVICE</footer>
+<footer><div class="wrap"><p>Jarvis Enterprises · Bootstrap → Sovereignty · Zürich — Genève · Not financial advice</p></div></footer>
 </body></html>

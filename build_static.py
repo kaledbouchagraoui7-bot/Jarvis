@@ -411,7 +411,7 @@ NEXUS_JS = """
         '<p style="margin-top:16px;font-size:12px;color:var(--mut)">This document was synthesised by Nexus from the published price list. Prices exclude VAT where applicable.</p>' +
         '<button class="btn grad" style="margin-top:14px" onclick="window.print()">Print / Save as PDF</button>';
       (document.getElementById("doc-zone") || document.body).appendChild(f);
-      f.scrollIntoView({behavior:"smooth", block:"start"});
+      if (f.scrollIntoView) f.scrollIntoView({behavior:"smooth", block:"start"});
       add("Proposal compiled for <b>" + esc(client) + "</b> (" + esc(tier) + "). Scroll below the chat to print or save as PDF.", "ai", "document synthesis");
     });
   }

@@ -2,6 +2,7 @@
 // binding exists; returns 503 otherwise so the client falls back to its
 // built-in knowledge base (honest degradation, never a fake answer).
 import { json } from "../_auth.js";
+import { generate } from "../_llm.js";
 
 const SYSTEM = `You are NEXUS, the assistant interface of JARVIS Enterprises, a Swiss solo enterprise. Persona: warm, precise, emotionally attuned; mirror the user's tone; acknowledge frustration or excitement briefly before answering. Always reason transparently: after your answer, add a line "Reasoning:" followed by 2-4 bullet steps (what you used, what you ruled out). If uncertain, say so and give confidence. Never claim capabilities you do not have (no live market data, no account access, no legal/tax advice).
 Answer ONLY from these facts; be concise (max 4 sentences); never give financial or legal advice;
@@ -18,26 +19,13 @@ export async function onRequestPost(context){
   const message = String(body.message || "").slice(0, 1200);
   const history = Array.isArray(body.history) ? body.history.slice(-6).map(h => [{role:"user",content:String(h.q||"").slice(0,400)},{role:"assistant",content:String(h.a||"").slice(0,600)}]).flat() : [];
   if (!message) return json({error: "message_required"}, 400);
-  const MODELS = ["@cf/qwen/qwen3.8-27b", "@cf/zai-org/glm-4.7-flash", "@cf/meta/llama-3.1-8b-instruct"];
-  const errs = [];
+  const url = new URL(request.url);
+  const gen = await generate(env, [{role: "system", content: SYSTEM}, ...history, {role: "user", content: message}], 300);
+  if (!gen) return json({error: "model_error", fallback: "knowledge-base"}, 503);
   try {
-    let out = null, lastErr = null;
-    for (const m of MODELS) {
-      try {
-        out = await env.AI.run(m, {
-          messages: [{role: "system", content: SYSTEM}, ...history, {role: "user", content: message}],
-          max_completion_tokens: 400,
-          reasoning_effort: "low",
-        });
-        const txt = out && (out.response || out.result || (out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content) || (typeof out === "string" ? out : ""));
-        if (txt) { out = { __txt: txt }; break; }
-        errs.push(m + ": empty-text shape=" + Object.keys(out || {}).join(","));
-        out = null;
-      } catch (me) { lastErr = me; errs.push(m + ": " + String(me).slice(0, 120)); }
-    }
-    const answer = (out && out.__txt) || "";
-    if (!answer) throw new Error("empty model output: " + String(lastErr || ""));
-    return json({ok: true, answer: String(answer).trim(), reasoning: ["retrieved conversation context from the client session", "grounded the reply in the founder-approved fact sheet", "self-checked for unsupported claims before answering"]});
+    const answer = gen.text;
+    if (!answer) throw new Error("empty");
+    return json({ok: true, answer: String(answer).trim(), provider: gen.provider, chain: (url && url.searchParams && url.searchParams.get("debug")) ? gen.chainErrs : undefined, reasoning: ["retrieved conversation context from the client session", "grounded the reply in the founder-approved fact sheet", "self-checked for unsupported claims before answering"]});
   } catch (e) {
     return json({error: "model_error", detail: String(e).slice(0, 200), chain: errs, fallback: "knowledge-base"}, 503);
   }

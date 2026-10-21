@@ -21,5 +21,6 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Static build output (Cloudflare Pages builds this in CI)
-dist/
+# dist/ is COMMITTED on purpose: the Cloudflare build pipeline has no
+# build command (Build command: None) and deploys dist/ straight from git.
+# Regenerate locally with: python3 build_static.py

@@ -274,6 +274,12 @@ a{color:#8A6A2F}
   <div class="card"><h3>Workers</h3><div class="big gold" id="au-workers">–</div><div class="note">replicated instances</div></div>
   <div class="card"><h3>Last cycle</h3><div class="big" id="au-sum">–</div><div class="note">proposals / executions / spawns</div></div>
  </div>
+ <h2>Mission &amp; notifications</h2>
+ <div class="card" style="margin-bottom:14px">
+  <div class="kv"><span>Standing mission</span><b id="au-mission">none</b></div>
+  <div class="kv"><span>Decision notifications</span><b><button class="btn ghost" id="au-notify" style="padding:6px 12px;font-size:10px">Enable browser notifications</button></b></div>
+  <div class="note" style="margin-top:10px">While this console is open, every new major decision (transfer, order, replication) raises a system notification you can approve or refute here. Missions keep the automaton working across cycles until done, blocked or ended.</div>
+ </div>
  <h2>Controls</h2>
  <div class="card" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
   <select id="au-role"><option>ledger_audit</option><option>income_validate</option><option>plan_review</option><option>compliance_watch</option></select>
@@ -469,7 +475,32 @@ async function loadAuto(){
   $("#au-limits").innerHTML = Object.entries(L).map(([k,v]) => '<div class="kv"><span>' + esc(k.replace(/_/g," ")) + '</span><b>' + esc(String(v)) + '</b></div>').join("");
   $("#au-wtab").innerHTML = (a.workers || []).map(w2 => '<tr><td>' + esc(w2.id) + '</td><td>' + esc(w2.role || "?") + '</td><td class="' + (w2.status === "done" ? "ok" : "warn") + '">' + esc(w2.status) + '</td></tr>').join("") || '<tr><td colspan="3" class="dim">No workers yet.</td></tr>';
   $("#au-inbox").textContent = (a.inbox || []).join("\n") || "(empty — drop business income CSVs into runtime/inbox/)";
+  const m = a.mission || {};
+  $("#au-mission").textContent = m.status === "active" ? ("“" + m.text + "” · cycles worked: " + (m.cycles_worked || 0)) : (m.status || "none");
 }
+let __seenNx = null;
+setInterval(async () => {
+  try {
+    const n = await api("/api/nexus");
+    const ids = n.pending.map(r => r.id);
+    if (__seenNx === null) { __seenNx = ids; return; }
+    const fresh = ids.filter(i => !__seenNx.includes(i));
+    __seenNx = ids;
+    for (const id of fresh) {
+      const row = n.pending.find(r => r.id === id);
+      toast("Decision required: " + (row ? row.kind : id), "bad");
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("JARVIS — decision required", {body: (row ? row.kind + " " + (row.payload && row.payload.amount_chf ? "CHF " + row.payload.amount_chf : "") : id) + " — open the console to approve or refute.", tag: id});
+      }
+      loadAuto();
+    }
+  } catch (e) { /* console offline */ }
+}, 15000);
+$("#au-notify").addEventListener("click", async () => {
+  if (!("Notification" in window)) { toast("This browser has no Notification API", "bad"); return; }
+  const p = await Notification.requestPermission();
+  toast(p === "granted" ? "Notifications enabled — you will be pinged on every major decision" : "Permission: " + p, p === "granted" ? "ok" : "bad");
+});
 $("#au-spawn").addEventListener("click", async () => {
   try { const r = await post("/api/automaton/spawn-request", {role: $("#au-role").value});
     toast("replication staged: " + r.id + " — approve it in The Nexus", "ok"); loadNexus(); }

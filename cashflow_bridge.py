@@ -86,8 +86,8 @@ def compute_plan(row: dict) -> dict:
         else:
             note = "standard routing"
         if plan_ibkr < config.MIN_ORDER_CHF:
-            note += f"; IBKR leg below MIN_ORDER_CHF {config.MIN_ORDER_CHF} — carry over"
-            plan_ibkr = 0.0 if plan_ibkr < config.MIN_ORDER_CHF else plan_ibkr
+            note += "; IBKR leg below one cent — carried over"
+            plan_ibkr = 0.0
 
     return {
         "period": row["period"],

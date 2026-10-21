@@ -189,6 +189,10 @@ def cycle() -> dict:
         state["processed_inbox"].append(key)
         summary["workers_merged"] += 1
 
+    mis = mission_status()
+    if mis.get("status") == "active":
+        mis["cycles_worked"] = mis.get("cycles_worked", 0) + 1
+        _write_json(MISSION_FILE, mis)
     state["total_cycles"] += 1
     today = time.strftime("%Y-%m-%d")
     state["cycles_per_day"][today] = state["cycles_per_day"].get(today, 0) + 1
@@ -197,7 +201,8 @@ def cycle() -> dict:
                             "mode": "DRY-RUN" if config.DRY_RUN else "LIVE",
                             "cycle": state["total_cycles"], "depth": SPAWN_DEPTH,
                             "halted": halted(), "summary": summary,
-                            "workers_active": _active_workers()})
+                            "workers_active": _active_workers(),
+                            "mission": mission_status()})
     _log(f"cycle {state['total_cycles']} done: {summary}")
     return summary
 
@@ -274,6 +279,39 @@ def worker_run(role: str, task_id: str, approval: str) -> int:
     return rc
 
 
+# ------------------------------------------------------------------ mission --
+MISSION_FILE = config.RUNTIME_DIR / "automaton_mission.json"
+
+
+def mission_set(text: str) -> dict:
+    """A standing order: while active, the daemon keeps cycling toward it and
+    stages every required decision in The Nexus (major decisions only —
+    transfers, orders, replications). The human approves or refutes each."""
+    m = {"text": text, "started_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+         "status": "active", "cycles_worked": 0}
+    _write_json(MISSION_FILE, m)
+    _log(f"mission accepted: {text!r} — I will keep working until done, "
+         f"blocked, or ended; every major decision goes to The Nexus")
+    return m
+
+
+def mission_status() -> dict:
+    m = _read_json(MISSION_FILE, {})
+    if not m:
+        return {"status": "none"}
+    return m
+
+
+def mission_end(reason: str = "") -> None:
+    m = mission_status()
+    if m.get("status") == "active":
+        m["status"] = "ended"
+        m["ended_at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+        m["reason"] = reason
+        _write_json(MISSION_FILE, m)
+    _log(f"mission ended ({reason or 'by operator'})")
+
+
 # ------------------------------------------------------------------ daemon --
 def daemon() -> int:
     _log(f"daemon starting (interval {config.AUTOMATON_CYCLE_INTERVAL_S}s, "
@@ -311,6 +349,13 @@ def main(argv=None) -> int:
     sub.add_parser("halt", help="engage kill switch")
     sub.add_parser("resume", help="release kill switch")
     sub.add_parser("workers", help="list replicated workers")
+    ms = sub.add_parser("mission", help="standing order: keep working until done/blocked")
+    msub = ms.add_subparsers(dest="mcmd", required=True)
+    mset = msub.add_parser("set", help="give the automaton a mission")
+    mset.add_argument("text", nargs="+")
+    msub.add_parser("status", help="show current mission")
+    mend = msub.add_parser("end", help="end the mission")
+    mend.add_argument("--reason", default="")
     rs = sub.add_parser("request-spawn", help="stage a replication for Nexus approval")
     rs.add_argument("--role", required=True, choices=sorted(worker_roles.ROLES))
     wr = sub.add_parser("worker-run", help="internal: replicated instance")
@@ -336,6 +381,14 @@ def main(argv=None) -> int:
     if args.cmd == "workers":
         for w in _active_workers():
             print(f"{w['id']:<28} {str(w['role']):<16} {w['status']}")
+        return 0
+    if args.cmd == "mission":
+        if args.mcmd == "set":
+            print(json.dumps(mission_set(" ".join(args.text)), indent=2))
+        elif args.mcmd == "status":
+            print(json.dumps(mission_status(), indent=2))
+        else:
+            mission_end(args.reason)
         return 0
     if args.cmd == "request-spawn":
         aid = nx.stage("spawn_worker", {"role": args.role,

@@ -90,6 +90,8 @@ def main() -> int:
     cfg.PILLAR_3A_ANNUAL_CAP_CHF = old_cap
     check("cashflow: 3a capped, overflow to IBKR", capped["pillar_3a_chf"] == 500.0 and capped["ibkr_chf"] > 0, f"3a={capped['pillar_3a_chf']} ibkr={capped['ibkr_chf']}")
 
+    tiny = cb.compute_plan({"period": "2026-05", "gross": 1.0, "expenses": 0.0, "tax_reserve": 0.0})
+    check("cashflow: one-cent-scale profit still routes (no minimum)", tiny["ibkr_chf"] > 0 and tiny["pillar_3a_chf"] > 0, f"3a={tiny['pillar_3a_chf']} ibkr={tiny['ibkr_chf']}")
     # ---------------- 3. Nexus gate ----------------
     aid = nx.stage("ibkr_order", {"amount_chf": 100.0, "ticker": "VWRL"}, proposed_by="selftest")
     try:
@@ -120,14 +122,19 @@ def main() -> int:
             "limit_price": 118.0, "currency": "CHF", "margin": False,
             "derivative": False, "short": False, "notional_chf": 590.0}
     check("guard: clean DCA buy passes", bool(guard.check_order(base, 50_000)))
+    huge = guard.check_order({**base, "qty": 900, "notional_chf": 100_000.0}, 0.0)
+    check("guard: CHF 100k fresh-capital buy NOT blocked (no maximum)", huge.ok, "; ".join(huge.violations[:1]))
+    churn = guard.check_order({**base, "side": "SELL", "qty": 900, "notional_chf": 100_000.0}, 0.0)
+    check("guard: immediate 100k sell still blocked (holding rule intact)", not churn.ok)
+
     check("guard: margin blocked", not guard.check_order({**base, "margin": True}, 50_000))
     check("guard: derivatives blocked", not guard.check_order({**base, "derivative": True, "sec_type": "OPT"}, 50_000))
     check("guard: short selling blocked", not guard.check_order({**base, "short": True, "side": "SELL"}, 50_000))
     guard.record_fill("BUY", "VWRL", 5, 118.0, "CHF", 590.0)
     young = guard.check_order({**base, "side": "SELL", "qty": 5, "notional_chf": 590.0}, 50_000)
     check("guard: sell of 0-day lot blocked (<180d)", not young.ok, "; ".join(young.violations[:1]))
-    big = guard.check_order({**base, "qty": 500, "notional_chf": 59_000}, 1_000)
-    check("guard: turnover ceiling blocked", not big.ok, "; ".join(big.violations[:1]))
+    big = guard.check_order({**base, "side": "SELL", "qty": 500, "notional_chf": 59_000}, 1_000)
+    check("guard: turnover ceiling blocked on churning sell", not big.ok and "turnover" in big.violations[0], "; ".join(big.violations[:1]))
     health = guard.portfolio_health(50_000)
     check("guard: holding tracker reports avg days", "avg_holding_days" in health.info)
 

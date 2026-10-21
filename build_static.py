@@ -68,7 +68,7 @@ LANDING = """<!DOCTYPE html>
 <div class="blobs"><i></i><i></i><i></i></div>
 <nav class="glassnav rv"><div class="wrap navin">
  <a class="brand2" href="/">JARVIS</a>
- <div class="nlinks"><a href="#products">Products</a><a href="#how">How it works</a><a href="#calc">Calculator</a><a href="/pricing.html">Pricing</a><a href="/journal.html">Journal</a><a href="/portal.html">Portal</a></div>
+ <div class="nlinks"><a href="/nexus.html" style="color:var(--g3);font-weight:800">Nexus</a><a href="#products">Products</a><a href="#how">How it works</a><a href="#calc">Calculator</a><a href="/pricing.html">Pricing</a><a href="/journal.html">Journal</a><a href="/portal.html">Portal</a></div>
  <button class="btn grad" data-chat-open>Ask the concierge</button>
 </div></nav>
 <header class="hero"><div class="wrap" style="text-align:center">
@@ -94,11 +94,11 @@ LANDING = """<!DOCTYPE html>
   <div class="gcard rv"><div class="gicon">①</div><h3>Hyper-personalized B2B lead enrichment</h3>
    <p>Decision-maker data scraped, validated and enriched at compute cost — then outreach written for one person at a time.</p>
    <div class="chips"><span>validated data</span><span>per-prospect copy</span><span>retainer delivery</span></div>
-   <a class="btn ghost" href="mailto:kaled.boouchagraoui@gmail.com?subject=Lead%20enrichment">Request a sample batch</a></div>
+   <a class="btn ghost" href="mailto:cogops.engine@gmail.com?subject=Lead%20enrichment">Request a sample batch</a></div>
   <div class="gcard rv"><div class="gicon">②</div><h3>Programmatic SEO at scale</h3>
    <p>Live data streams ingested and transformed into long-tail landing pages that rank — hundreds per client, refreshed autonomously.</p>
    <div class="chips"><span>data-stream ingestion</span><span>long-tail pages</span><span>autonomous refresh</span></div>
-   <a class="btn ghost" href="mailto:kaled.boouchagraoui@gmail.com?subject=Programmatic%20SEO">Request a pilot cluster</a></div>
+   <a class="btn ghost" href="mailto:cogops.engine@gmail.com?subject=Programmatic%20SEO">Request a pilot cluster</a></div>
  </div>
 </div></section>
 <section id="how" class="tint"><div class="wrap">
@@ -144,7 +144,7 @@ LANDING = """<!DOCTYPE html>
  <h2 class="rv">Work with the enterprise.</h2>
  <p class="sub rv" style="margin:10px auto 26px">Retainers for lead enrichment and programmatic SEO. One human reads every message.</p>
  <div class="rv" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-  <a class="btn grad" href="mailto:kaled.boouchagraoui@gmail.com?subject=JARVIS%20enquiry">Write to the founder</a>
+  <a class="btn grad" href="mailto:cogops.engine@gmail.com?subject=JARVIS%20enquiry">Write to the founder</a>
   <button class="btn ghost" data-chat-open>Ask the concierge</button>
  </div>
 </div></section>
@@ -331,6 +331,119 @@ details p{font-size:13.5px;color:var(--mut);margin-top:10px;max-width:760px}
 footer .wrap p,footer .wrap a{font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--mut);text-decoration:none}
 """
 
+
+NEXUS_JS = """
+"use strict";
+(function(){
+  var body = document.getElementById("nx-body");
+  var inp = document.getElementById("nx-in");
+  var modeEl = document.getElementById("nx-mode");
+  var pendingTool = null;
+  function esc(s){ return String(s ?? "").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+  function add(html, who, tag){
+    var m = document.createElement("div"); m.className = "m " + who;
+    m.innerHTML = (tag ? '<span class="tag">' + esc(tag) + "</span>" : "") + html;
+    body.appendChild(m); body.scrollTop = body.scrollHeight; return m;
+  }
+  function reasoning(r){ return r && r.length ? '<details><summary>why I say this</summary><ul>' + r.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul></details>" : ""; }
+  add("Hello — I'm <b>Nexus</b>. Ask me anything about this enterprise, or use the tools on the left. I run in <b>knowledge mode</b> (verified public facts) until the founder binds Workers AI, then I switch to <b>ai mode</b> with the same honesty labels. My memory lives only in this browser.", "ai", "nexus");
+  var mem = JSON.parse(localStorage.getItem("jarvis_nexus_mem") || "[]");
+  if (mem.length) add("Memory: " + mem.length + " exchange(s) stored locally on this device. Last topic: “" + esc(mem[mem.length-1].q) + "”.", "ai", "memory");
+
+  async function send(){
+    var q = inp.value.trim(); if (!q) return; inp.value = "";
+    add(esc(q), "me");
+    if (pendingTool === "research"){ pendingTool = null; return research(q); }
+    var ph = add("…", "ai", "thinking");
+    var res = await window.__nexusAsk(q);
+    ph.remove();
+    modeEl.textContent = res.mode + " mode";
+    var out = esc(res.answer);
+    var idx = out.indexOf("Reasoning:");
+    if (idx !== -1){ out = out.slice(0, idx) + reasoning(out.slice(idx + 10).split("\\n").filter(Boolean).map(s => s.replace(/^[-*]\\s*/, ""))); }
+    else out += reasoning(res.reasoning);
+    add(out, "ai", res.mode);
+    mem.push({q: q, a: res.answer, mode: res.mode, at: Date.now()});
+    localStorage.setItem("jarvis_nexus_mem", JSON.stringify(mem.slice(-50)));
+  }
+  async function research(q){
+    var ph = add("Consulting Wikipedia + Crossref…", "ai", "deep research");
+    try {
+      var r = await fetch("/api/research", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({question: q})});
+      var j = await r.json(); ph.remove();
+      if (!r.ok) return add(esc(j.note || j.error || "no sources found"), "ai", "deep research");
+      modeEl.textContent = j.mode + " mode";
+      var srcs = (j.sources.citations || []).map((c, i) => '<a href="https://doi.org/' + esc(c.doi) + '" target="_blank" rel="noopener">[' + (i+1) + '] ' + esc(c.title) + " (" + esc(c.year) + ")</a>").join("");
+      add("<b>Brief:</b> " + esc(j.brief) + reasoning(j.reasoning) +
+          (j.sources.background ? '<div class="srcs"><a href="' + esc(j.sources.background.url) + '" target="_blank" rel="noopener">[bg] ' + esc(j.sources.background.title) + " — Wikipedia</a>" + srcs + "</div>" : '<div class="srcs">' + srcs + "</div>"),
+          "ai", "deep research · " + j.mode);
+    } catch (e) { ph.remove(); add("Research service unreachable — try again shortly.", "ai", "deep research"); }
+  }
+  function map(){
+    var R = window.__ROSTER__ || {};
+    var html = "<b>The seven universes</b>";
+    Object.entries(R.universes || {}).forEach(function(e){
+      var uid = e[0], u = e[1];
+      var groups = (R.category_groups || []).filter(g => g.universe === uid);
+      var specs = (R.specialized_roles && R.specialized_roles.agents || []).filter(a => a.universe === uid);
+      html += '<details style="margin-top:8px"><summary>' + uid + " · " + esc(u.name) + "</summary><ul>";
+      groups.forEach(g => { html += "<li><b>" + esc(g.group) + ":</b> " + g.agents.map(a => esc(a.name)).join(", ") + "</li>"; });
+      if (specs.length) html += "<li><b>Specialized:</b> " + specs.map(a => esc(a.name)).join(", ") + "</li>";
+      html += "</ul></details>";
+    });
+    add(html, "ai", "system map");
+  }
+  function doc(){
+    var m = add('Generate a proposal: <input id="dc-client" placeholder="Client company" style="border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin:0 6px"> <select id="dc-tier" style="border:1px solid var(--line);border-radius:8px;padding:6px 10px"><option>Enrichment Starter — CHF 1,500/mo</option><option>Growth Engine — CHF 3,500/mo</option><option>pSEO Engine — CHF 4,500/mo</option></select> <button class="btn grad" id="dc-go" style="padding:7px 14px;font-size:11px;margin-left:6px">Build</button>', "ai", "document synthesis");
+    m.querySelector("#dc-go").addEventListener("click", function(){
+      var client = m.querySelector("#dc-client").value || "Prospective client";
+      var tier = m.querySelector("#dc-tier").value;
+      var old = document.getElementById("doc-out"); if (old) old.remove();
+      var f = document.createElement("div"); f.id = "doc-out"; f.className = "docframe";
+      f.innerHTML = '<div style="font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--g3)">JARVIS Enterprises · Proposal</div>' +
+        "<h2>" + esc(tier.split(" — ")[0]) + "</h2>" +
+        '<div style="color:var(--mut);font-size:13px;margin-bottom:14px">Prepared for ' + esc(client) + " · " + new Date().toLocaleDateString() + " · valid 30 days</div>" +
+        '<div class="dkv"><span>Scope</span><b>' + esc(tier) + "</b></div>" +
+        '<div class="dkv"><span>Delivery</span><b>Monthly retainer, 30-day notice</b></div>' +
+        '<div class="dkv"><span>Production</span><b>110-agent hierarchy, human-reviewed</b></div>' +
+        '<div class="dkv"><span>Governance</span><b>Nexus human gate on every external action</b></div>' +
+        '<div class="dkv"><span>Contact</span><b>cogops.engine@gmail.com</b></div>' +
+        '<p style="margin-top:16px;font-size:12px;color:var(--mut)">This document was synthesised by Nexus from the published price list. Prices exclude VAT where applicable.</p>' +
+        '<button class="btn grad" style="margin-top:14px" onclick="window.print()">Print / Save as PDF</button>';
+      document.querySelector(".nx").appendChild(f);
+      f.scrollIntoView({behavior:"smooth"});
+      add("Proposal compiled for <b>" + esc(client) + "</b> (" + esc(tier) + "). Scroll below the chat to print or save as PDF.", "ai", "document synthesis");
+    });
+  }
+  function calc(){
+    var m = add('Monthly net profit (CHF): <input id="cl-in" type="number" value="5000" style="border:1px solid var(--line);border-radius:8px;padding:6px 10px;width:120px;margin-left:6px"> <span id="cl-out" style="margin-left:10px"></span>', "ai", "calculator");
+    var f = function(){ var net = Math.max(0, parseFloat(m.querySelector("#cl-in").value || 0) || 0);
+      var sw = net * .3, a = Math.min(sw * .4, 7258), e = sw - a;
+      m.querySelector("#cl-out").innerHTML = "sweep <b>CHF " + sw.toFixed(2) + "</b> → 3a <b>CHF " + a.toFixed(2) + "</b> + ETF <b>CHF " + e.toFixed(2) + "</b>"; };
+    m.querySelector("#cl-in").addEventListener("input", f); f();
+  }
+  function memoryInfo(){
+    add("Memory: " + mem.length + " exchange(s) in this browser's local storage — never sent anywhere except as short context to the AI you talk to. “Clear memory” wipes it.", "ai", "memory");
+  }
+  document.querySelectorAll(".tool").forEach(function(t){
+    t.addEventListener("click", function(){
+      var k = t.dataset.tool;
+      if (k === "research"){ pendingTool = "research"; add("What should I research? Type a topic and I'll compile a cited brief from Wikipedia + Crossref.", "ai", "deep research"); inp.focus(); }
+      if (k === "map") map();
+      if (k === "doc") doc();
+      if (k === "calc") calc();
+      if (k === "memory") memoryInfo();
+    });
+  });
+  document.getElementById("nx-send").addEventListener("click", send);
+  inp.addEventListener("keydown", function(e){ if (e.key === "Enter") send(); });
+  document.getElementById("nx-clear").addEventListener("click", function(){
+    localStorage.removeItem("jarvis_nexus_mem"); mem = [];
+    add("Memory cleared from this browser.", "ai", "memory");
+  });
+})();
+"""
+
 SITE_JS = """
 "use strict";
 (function(){
@@ -375,18 +488,27 @@ SITE_JS = """
     [/replicat|worker|spawn|multiply|alone|autonom/i, "The Core can replicate as bounded worker processes on the founder's machine: max 3 concurrent, depth 1 (workers cannot breed), each dies after one read-only report — and each spawn needs human approval first."],
     [/data|privacy|gdpr|store|secret/i, "The public site stores nothing personal. Ledgers, logs and approvals live on the founder's machine in Switzerland; the client portal (when enabled) uses Swiss-region storage with hashed passwords and 7-day sessions. FADP & GDPR rights honoured on request."],
     [/invest|etf|3a|pillar|sweep|profit/i, "Each month 30% of net profit is swept: 40% to Swiss Pillar 3a (annual ceiling aware) and 60% to a global ETF (VWRL/VT) via dollar-cost averaging — every order human-approved first. Zero or negative months route nothing."],
-    [/contact|email|founder|human being|call/i, "One human reads every message: kaled.boouchagraoui@gmail.com — or use the 'Write to the founder' button below."],
+    [/contact|email|founder|human being|call/i, "One human reads every message: cogops.engine@gmail.com — or use the 'Write to the founder' button below."],
     [/domain|google|search|seo|index/i, "The site ships sitemap.xml and robots.txt; a custom domain plus Google Search Console submission brings search traffic within days to weeks. Programmatic SEO for clients runs on the same discipline."],
     [/product|service|offer|sell|do you/i, "Two product lines: hyper-personalized B2B lead enrichment (validated decision-maker data + per-prospect outreach) and programmatic SEO (data-driven long-tail landing pages at scale), delivered as monthly retainers."]
   ];
-  function kbAnswer(q){
-    for (var i=0;i<KB.length;i++) if (KB[i][0].test(q)) return KB[i][1];
-    return "I can answer about products, pricing, safety, governance, data and contact — try one of those, or email the founder: kaled.boouchagraoui@gmail.com";
-  }
+  function kbAnswer(q){ return window.__nexusKB(q).answer; }
+  window.__nexusKB = function(q){
+    for (var i=0;i<KB.length;i++) if (KB[i][0].test(q)) return {answer: KB[i][1], topic: KB[i][0].source};
+    return {answer: "I can help with products, pricing, safety, governance, data, contact, research briefs, the system map and proposal documents — or open the full Nexus interface for tools. For anything else: cogops.engine@gmail.com", topic: "fallback"};
+  };
+  window.__nexusAsk = async function(q){
+    try {
+      var r = await fetch("/api/chat", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({message: q, history: (JSON.parse(localStorage.getItem("jarvis_nexus_mem") || "[]")).slice(-6)})});
+      if (r.ok){ var j = await r.json(); if (j.answer) return {answer: j.answer, mode: "nexus ai", reasoning: j.reasoning || []}; }
+    } catch (e) {}
+    var k = window.__nexusKB(q);
+    return {answer: k.answer, mode: "knowledge", reasoning: ["matched question to a published-fact cluster", "answered strictly from the enterprise's public information"]};
+  };
   function buildChat(){
     var fab = document.createElement("button"); fab.id = "chat-fab"; fab.setAttribute("aria-label","Open concierge chat"); fab.textContent = "✦";
     var panel = document.createElement("div"); panel.id = "chat-panel";
-    panel.innerHTML = '<div id="chat-head"><div><b>Jarvis Concierge</b><br><span id="chat-mode">knowledge mode</span></div>' +
+    panel.innerHTML = '<div id="chat-head"><div><b>Nexus</b> <a href="/nexus.html" style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--g3);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:3px 9px;background:#fff;margin-left:6px">full interface</a><br><span id="chat-mode">knowledge mode</span></div>' +
       '<button class="btn ghost" id="chat-close" style="padding:6px 12px;font-size:11px">Close</button></div>' +
       '<div id="chat-body"></div><div id="chat-foot"><input id="chat-in" placeholder="Ask about pricing, safety, the agents…" aria-label="Message">' +
       '<button class="btn grad" id="chat-send" style="padding:10px 16px">Send</button></div>';
@@ -397,19 +519,18 @@ SITE_JS = """
       m.innerHTML = (tag ? '<span class="tag">' + tag + "</span>" : "") + text.replace(/[&<>]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c]; });
       body.appendChild(m); body.scrollTop = body.scrollHeight; return m;
     }
-    add("Hello — I answer from the enterprise's public information" + (window.__JARVIS_AI__ ? " and the founder-approved AI." : ". For anything else, email the founder."), "ai", "concierge");
+    add("I'm Nexus — this enterprise's assistant. I answer from verified public facts, and I always show my mode and reasoning. Tools (research, system map, proposals) live in the full interface.", "ai", "nexus");
     async function send(){
       var inp = panel.querySelector("#chat-in"); var q = inp.value.trim(); if (!q) return;
       inp.value = ""; add(q, "me");
       var placeholder = add("…", "ai", "thinking");
-      var answer = null, mode = "concierge";
-      try {
-        var r = await fetch("/api/chat", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({message: q})});
-        if (r.ok){ var j = await r.json(); if (j.answer){ answer = j.answer; mode = "workers ai"; } }
-      } catch (e) { /* fall through to knowledge base */ }
+      var res = await window.__nexusAsk(q);
       placeholder.remove();
-      add(answer || kbAnswer(q), "ai", mode);
-      panel.querySelector("#chat-mode").textContent = mode === "workers ai" ? "ai mode (workers ai)" : "knowledge mode";
+      add(res.answer, "ai", res.mode);
+      panel.querySelector("#chat-mode").textContent = res.mode + " mode";
+      var mem = JSON.parse(localStorage.getItem("jarvis_nexus_mem") || "[]");
+      mem.push({q: q, a: res.answer, mode: res.mode, at: Date.now()});
+      localStorage.setItem("jarvis_nexus_mem", JSON.stringify(mem.slice(-50)));
     }
     panel.querySelector("#chat-send").addEventListener("click", send);
     panel.querySelector("#chat-in").addEventListener("keydown", function(e){ if (e.key === "Enter") send(); });
@@ -430,7 +551,7 @@ def build_landing() -> str:
 
 SITE_BASE = os.environ.get("SITE_BASE", "https://jarvis-8wr.pages.dev")
 
-SITE_PAGES = ["index.html", "pricing.html", "journal.html", "journal/post-01.html",
+SITE_PAGES = ["index.html", "nexus.html", "pricing.html", "journal.html", "journal/post-01.html",
               "journal/post-02.html", "privacy.html", "impressum.html", "portal.html"]
 
 
@@ -444,6 +565,9 @@ def main() -> int:
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 if f.suffix == ".html":
                     html = f.read_text(encoding="utf-8")
+                    if "__ROSTER_JSON__" in html:
+                        roster = json.loads((ROOT / "agent_universes.json").read_text(encoding="utf-8"))
+                        html = html.replace("__ROSTER_JSON__", json.dumps(roster))
                     if 'src="/site.js"' not in html:
                         html = html.replace("</body>", '<script src="/site.js"></script>\n</body>', 1)
                     dest.write_text(html, encoding="utf-8")
@@ -451,6 +575,7 @@ def main() -> int:
                     shutil.copyfile(f, dest)
     (DIST / "style.css").write_text(SITE_CSS, encoding="utf-8")
     (DIST / "site.js").write_text(SITE_JS, encoding="utf-8")
+    (DIST / "nexus.js").write_text(NEXUS_JS, encoding="utf-8")
     urls = "".join(
         f"  <url><loc>{SITE_BASE}/{'index.html' if p == 'index.html' else p}"
         f"</loc><changefreq>weekly</changefreq></url>\n"

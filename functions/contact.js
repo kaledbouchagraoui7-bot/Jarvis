@@ -11,7 +11,7 @@ export async function onRequestPost(context){
       JSON.stringify({name: name || null, email, message, at: new Date().toISOString()}));
     return json({ok:true, stored:true});
   }
-  return json({ok:false, stored:false, fallback:"mailto:kaled.boouchagraoui@gmail.com",
+  return json({ok:false, stored:false, fallback:"mailto:cogops.engine@gmail.com",
     note:"Storage not enabled on this deployment yet — your browser will open its mail app."});
 }
 export async function onRequestGet(){ return json({error:"post_only"}, 405); }

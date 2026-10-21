@@ -89,14 +89,29 @@ def market_mid(ib, tgt: config.EtfTarget):
 
 
 def build_order(amount_chf: float, price: float, tgt: config.EtfTarget, fx: float):
-    """Whole-share LIMIT buy; residual cash carries over to next sweep."""
-    qty = int(math.floor(amount_chf / fx / price)) if price > 0 else 0
+    """LIMIT buy sized to the approved amount with NO minimum and NO maximum:
+    whole shares when the amount covers at least one share, otherwise a
+    fractional cash-quantity order (IBKR cashQty) down to the one-cent floor.
+    Residual cash carries over to the next sweep."""
     limit = config.as_chf(price * (1 + config.LIMIT_MAX_OFFSET_BPS / 10_000.0))
-    return {"side": "BUY", "sec_type": "STK", "ticker": tgt.symbol, "qty": qty,
-            "limit_price": limit, "currency": tgt.currency, "margin": False,
-            "derivative": False, "short": False,
-            "notional_chf": config.as_chf(qty * limit * fx),
-            "residual_chf": config.as_chf(amount_chf - qty * limit * fx)}
+    budget = amount_chf / fx
+    qty = int(math.floor(budget / limit)) if limit > 0 else 0
+    if qty >= 1:
+        return {"side": "BUY", "sec_type": "STK", "ticker": tgt.symbol, "qty": qty,
+                "limit_price": limit, "currency": tgt.currency, "margin": False,
+                "derivative": False, "short": False, "fractional": False,
+                "notional_chf": config.as_chf(qty * limit * fx),
+                "residual_chf": config.as_chf(amount_chf - qty * limit * fx)}
+    if not config.FRACTIONAL_SHARES or budget < 0.01:
+        return {"side": "BUY", "sec_type": "STK", "ticker": tgt.symbol, "qty": 0,
+                "limit_price": limit, "currency": tgt.currency, "margin": False,
+                "derivative": False, "short": False, "fractional": False,
+                "notional_chf": 0.0, "residual_chf": config.as_chf(amount_chf)}
+    return {"side": "BUY", "sec_type": "STK", "ticker": tgt.symbol, "qty": 0,
+            "cash_qty": config.as_chf(budget), "limit_price": limit,
+            "currency": tgt.currency, "margin": False, "derivative": False,
+            "short": False, "fractional": True,
+            "notional_chf": config.as_chf(amount_chf), "residual_chf": 0.0}
 
 
 def execute(ib, order: dict, tgt: config.EtfTarget):
@@ -105,6 +120,8 @@ def execute(ib, order: dict, tgt: config.EtfTarget):
     contract = Stock(tgt.symbol, tgt.exchange, tgt.currency)
     ib.qualifyContracts(contract)
     leg = LimitOrder("BUY", order["qty"], order["limit_price"])
+    if order.get("fractional"):          # IBKR cash-quantity (fractional) order
+        leg.cashQty = order["cash_qty"]
     trade = ib.placeOrder(contract, leg)
     ib.sleep(3)
     status = trade.orderStatus.status
@@ -151,9 +168,9 @@ def run_period(period: str, fx_usd_chf: float = 0.88) -> int:
         price = mid
 
     order = build_order(amount, price, tgt, fx)
-    if order["qty"] <= 0:
-        _log(f"{period}: amount CHF {amount:,.2f} buys 0 shares at "
-             f"{price:.2f} {tgt.currency} — carried over to next sweep")
+    if order["qty"] <= 0 and not order.get("fractional"):
+        _log(f"{period}: amount CHF {amount:,.2f} below the one-cent floor or "
+             f"fractional disabled — carried over to next sweep")
         return 0
 
     # ---- guardrails ---------------------------------------------------------
@@ -194,12 +211,14 @@ def run_period(period: str, fx_usd_chf: float = 0.88) -> int:
             return _halt(f"order submission failed: {exc}")
         ib.disconnect()
 
+    bought = (f"{order['qty']} shares" if not order.get("fractional")
+              else f"CHF {order['cash_qty']:,.2f} fractional")
     guard.record_fill("BUY", tgt.symbol, order["qty"], fill["fill_price"],
                       tgt.currency, order["notional_chf"], fx)
-    _log(f"{period}: DCA complete — {order['qty']} {tgt.symbol} @ "
+    _log(f"{period}: DCA complete — {bought} {tgt.symbol} @ "
          f"{fill['fill_price']:.2f} {tgt.currency} status={fill['status']} "
          f"residual CHF {order['residual_chf']:,.2f} carried over")
-    print(f"\n✓ {period}: bought {order['qty']} {tgt.symbol} @ "
+    print(f"\n✓ {period}: bought {bought} of {tgt.symbol} @ "
           f"{fill['fill_price']:.2f} {tgt.currency} "
           f"({fill['status']}); residual CHF {order['residual_chf']:,.2f}")
     return 0

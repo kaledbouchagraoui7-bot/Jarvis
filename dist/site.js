@@ -42,18 +42,27 @@
     [/replicat|worker|spawn|multiply|alone|autonom/i, "The Core can replicate as bounded worker processes on the founder's machine: max 3 concurrent, depth 1 (workers cannot breed), each dies after one read-only report — and each spawn needs human approval first."],
     [/data|privacy|gdpr|store|secret/i, "The public site stores nothing personal. Ledgers, logs and approvals live on the founder's machine in Switzerland; the client portal (when enabled) uses Swiss-region storage with hashed passwords and 7-day sessions. FADP & GDPR rights honoured on request."],
     [/invest|etf|3a|pillar|sweep|profit/i, "Each month 30% of net profit is swept: 40% to Swiss Pillar 3a (annual ceiling aware) and 60% to a global ETF (VWRL/VT) via dollar-cost averaging — every order human-approved first. Zero or negative months route nothing."],
-    [/contact|email|founder|human being|call/i, "One human reads every message: kaled.boouchagraoui@gmail.com — or use the 'Write to the founder' button below."],
+    [/contact|email|founder|human being|call/i, "One human reads every message: cogops.engine@gmail.com — or use the 'Write to the founder' button below."],
     [/domain|google|search|seo|index/i, "The site ships sitemap.xml and robots.txt; a custom domain plus Google Search Console submission brings search traffic within days to weeks. Programmatic SEO for clients runs on the same discipline."],
     [/product|service|offer|sell|do you/i, "Two product lines: hyper-personalized B2B lead enrichment (validated decision-maker data + per-prospect outreach) and programmatic SEO (data-driven long-tail landing pages at scale), delivered as monthly retainers."]
   ];
-  function kbAnswer(q){
-    for (var i=0;i<KB.length;i++) if (KB[i][0].test(q)) return KB[i][1];
-    return "I can answer about products, pricing, safety, governance, data and contact — try one of those, or email the founder: kaled.boouchagraoui@gmail.com";
-  }
+  function kbAnswer(q){ return window.__nexusKB(q).answer; }
+  window.__nexusKB = function(q){
+    for (var i=0;i<KB.length;i++) if (KB[i][0].test(q)) return {answer: KB[i][1], topic: KB[i][0].source};
+    return {answer: "I can help with products, pricing, safety, governance, data, contact, research briefs, the system map and proposal documents — or open the full Nexus interface for tools. For anything else: cogops.engine@gmail.com", topic: "fallback"};
+  };
+  window.__nexusAsk = async function(q){
+    try {
+      var r = await fetch("/api/chat", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({message: q, history: (JSON.parse(localStorage.getItem("jarvis_nexus_mem") || "[]")).slice(-6)})});
+      if (r.ok){ var j = await r.json(); if (j.answer) return {answer: j.answer, mode: "nexus ai", reasoning: j.reasoning || []}; }
+    } catch (e) {}
+    var k = window.__nexusKB(q);
+    return {answer: k.answer, mode: "knowledge", reasoning: ["matched question to a published-fact cluster", "answered strictly from the enterprise's public information"]};
+  };
   function buildChat(){
     var fab = document.createElement("button"); fab.id = "chat-fab"; fab.setAttribute("aria-label","Open concierge chat"); fab.textContent = "✦";
     var panel = document.createElement("div"); panel.id = "chat-panel";
-    panel.innerHTML = '<div id="chat-head"><div><b>Jarvis Concierge</b><br><span id="chat-mode">knowledge mode</span></div>' +
+    panel.innerHTML = '<div id="chat-head"><div><b>Nexus</b> <a href="/nexus.html" style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--g3);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:3px 9px;background:#fff;margin-left:6px">full interface</a><br><span id="chat-mode">knowledge mode</span></div>' +
       '<button class="btn ghost" id="chat-close" style="padding:6px 12px;font-size:11px">Close</button></div>' +
       '<div id="chat-body"></div><div id="chat-foot"><input id="chat-in" placeholder="Ask about pricing, safety, the agents…" aria-label="Message">' +
       '<button class="btn grad" id="chat-send" style="padding:10px 16px">Send</button></div>';
@@ -64,19 +73,18 @@
       m.innerHTML = (tag ? '<span class="tag">' + tag + "</span>" : "") + text.replace(/[&<>]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c]; });
       body.appendChild(m); body.scrollTop = body.scrollHeight; return m;
     }
-    add("Hello — I answer from the enterprise's public information" + (window.__JARVIS_AI__ ? " and the founder-approved AI." : ". For anything else, email the founder."), "ai", "concierge");
+    add("I'm Nexus — this enterprise's assistant. I answer from verified public facts, and I always show my mode and reasoning. Tools (research, system map, proposals) live in the full interface.", "ai", "nexus");
     async function send(){
       var inp = panel.querySelector("#chat-in"); var q = inp.value.trim(); if (!q) return;
       inp.value = ""; add(q, "me");
       var placeholder = add("…", "ai", "thinking");
-      var answer = null, mode = "concierge";
-      try {
-        var r = await fetch("/api/chat", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({message: q})});
-        if (r.ok){ var j = await r.json(); if (j.answer){ answer = j.answer; mode = "workers ai"; } }
-      } catch (e) { /* fall through to knowledge base */ }
+      var res = await window.__nexusAsk(q);
       placeholder.remove();
-      add(answer || kbAnswer(q), "ai", mode);
-      panel.querySelector("#chat-mode").textContent = mode === "workers ai" ? "ai mode (workers ai)" : "knowledge mode";
+      add(res.answer, "ai", res.mode);
+      panel.querySelector("#chat-mode").textContent = res.mode + " mode";
+      var mem = JSON.parse(localStorage.getItem("jarvis_nexus_mem") || "[]");
+      mem.push({q: q, a: res.answer, mode: res.mode, at: Date.now()});
+      localStorage.setItem("jarvis_nexus_mem", JSON.stringify(mem.slice(-50)));
     }
     panel.querySelector("#chat-send").addEventListener("click", send);
     panel.querySelector("#chat-in").addEventListener("keydown", function(e){ if (e.key === "Enter") send(); });

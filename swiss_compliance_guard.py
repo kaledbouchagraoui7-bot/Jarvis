@@ -122,9 +122,18 @@ def check_order(order: dict, portfolio_value_chf: float) -> ComplianceReport:
 
     # turnover ratio on the trailing 365 days (only sells/adds move the needle)
     year_ago = time.time() - 365 * DAY
-    traded = sum(f["notional_chf"] for f in led["fills"] if f["ts"] >= year_ago)
+    recent = [f for f in led["fills"] if f["ts"] >= year_ago]
+    traded = sum(f["notional_chf"] for f in recent)
     traded += order.get("notional_chf", 0.0)
-    base = max(portfolio_value_chf, led.get("portfolio_value_start_chf", 0.0), 1.0)
+    # Base includes trailing BUY notional (fresh capital injections) so a
+    # large one-off investment never trips the ratio — while repeated
+    # buying+selling (churning) still does, which is what the private-
+    # investor criterion targets. No order-size minimum or maximum exists.
+    contributed = sum(f["notional_chf"] for f in recent if f["side"] == "BUY")
+    if order.get("side") == "BUY":
+        contributed += order.get("notional_chf", 0.0)   # this injection itself
+    base = max(portfolio_value_chf, contributed,
+               led.get("portfolio_value_start_chf", 0.0), 1.0)
     ratio = traded / base
     info["trailing_turnover_ratio"] = round(ratio, 3)
     if ratio > L.max_annual_turnover_ratio:

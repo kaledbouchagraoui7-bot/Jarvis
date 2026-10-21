@@ -148,6 +148,37 @@ def main() -> int:
     audit = guard.audit_summary()
     check("audit: summary exposes limits for Auditing Agent", audit["limits"]["allow_margin"] is False and audit["fills"] >= 1)
 
+    # ---------------- 6. central automaton ----------------
+    import automaton as auto
+    inbox_csv = config.RUNTIME_DIR / "inbox" / "biz_2026-11.csv"
+    inbox_csv.write_text("period,gross_income_chf,business_expenses_chf,tax_reserve_chf\n2026-11,6000,2000,800\n")
+    before = len(nx.list_pending())
+    s = auto.cycle()
+    check("automaton: inbox CSV -> staged proposals", s.get("proposals", 0) >= 2 and len(nx.list_pending()) > before, str(s))
+    auto.halt()
+    check("automaton: kill switch skips cycle", auto.cycle().get("skipped") == "halted")
+    auto.resume()
+    old_cap = config.AUTOMATON_MAX_CYCLES_PER_DAY
+    config.AUTOMATON_MAX_CYCLES_PER_DAY = 0
+    check("automaton: daily budget blocks cycle", auto.cycle().get("skipped") == "daily-budget")
+    config.AUTOMATON_MAX_CYCLES_PER_DAY = old_cap
+    old_depth = auto.SPAWN_DEPTH
+    auto.SPAWN_DEPTH = 1
+    check("automaton: worker cannot replicate (depth cap)", auto.spawn_worker("ledger_audit", "NX-FAKE") is None)
+    auto.SPAWN_DEPTH = old_depth
+    sp = nx.stage("spawn_worker", {"role": "ledger_audit"}, proposed_by="selftest")
+    nx.decide(sp, "APPROVED")
+    s = auto.cycle()
+    check("automaton: approved spawn replicates a worker", s.get("spawns") == 1, str(s))
+    import time as _t
+    reports = list(config.RUNTIME_DIR.glob("workers/*/report.json"))
+    for _ in range(30):
+        if reports: break
+        _t.sleep(0.5); reports = list(config.RUNTIME_DIR.glob("workers/*/report.json"))
+    check("automaton: worker wrote bounded report", bool(reports) and "qty_reconciliation" in json.loads(reports[0].read_text())["result"], reports[0].name if reports else "none")
+    st = auto.status()
+    check("automaton: status exposes heartbeat+workers", st["heartbeat"].get("cycle", 0) >= 1 and isinstance(st["workers"], list))
+
     shutil.rmtree(tmp, ignore_errors=True)
     print("\n" + ("ALL GREEN" if not FAILS else f"FAILURES: {FAILS}"))
     return 1 if FAILS else 0

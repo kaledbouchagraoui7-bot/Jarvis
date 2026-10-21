@@ -196,3 +196,45 @@ python webapp.py          # opens http://localhost:8010
 Design rule: **the console decides, the terminal executes** — approval is
 possible from the UI (it *is* the human gate), but order execution stays in
 `ibkr_dca_engine.py`, so no browser session can silently trade.
+
+---
+
+## 8. The Central Automaton (`automaton.py`) — bounded autonomy
+
+A self-replicating, self-scheduling Core that runs the business **under your
+per-action approval**:
+
+```
+perceive (inbox CSVs, ledger, plans, worker reports)
+   -> propose (stage Nexus actions: transfers, orders, replications)
+   -> YOU approve (console or CLI — the only path to execution)
+   -> execute (engines re-verify approval + compliance internally)
+```
+
+```powershell
+python automaton.py daemon          # bounded loop (default 300s interval)
+python automaton.py run             # single cycle (cron-friendly)
+python automaton.py request-spawn --role ledger_audit   # ask to replicate
+python automaton.py status | workers
+python automaton.py halt | resume   # kill switch (console has buttons too)
+```
+
+**Autonomy cage (all enforced in code, verified by `selftest.py`):**
+* replication is Nexus-gated — the Core stages a `spawn_worker` action and a
+  human approval is required before a worker process starts;
+* depth cap 1: **workers can never replicate** (Core → worker, end of line);
+* budgets: max cycles/day (48), max proposals/cycle (6), max concurrent
+  workers (3) — all env-overridable;
+* kill switch: `runtime/automaton_STOP` freezes cycles, daemon and workers;
+* execution is delegated, not invented: the Core only runs engines on
+  APPROVED actions, and `ibkr_dca_engine` re-checks the gate itself;
+* workers are read-mostly bounded tasks (`worker_roles.py`: ledger_audit,
+  income_validate, plan_review, compliance_watch) writing a single report;
+* every perception, proposal, spawn and execution lands in
+  `runtime/investment_log.txt` for the Auditing Agent.
+
+**Business drop-zone:** put monthly income CSVs into `runtime/inbox/` — the
+next cycle computes sweep plans and stages them in your Nexus inbox. Zero or
+negative months stage nothing. Phase 2/3 business roles (pSEO drafts, lead
+validation, client reports) plug into `worker_roles.py` with the same
+contract: pure function → JSON report.

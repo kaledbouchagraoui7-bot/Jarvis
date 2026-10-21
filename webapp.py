@@ -35,6 +35,7 @@ from urllib.parse import parse_qs, urlparse
 import config
 import nexus_gate as nx
 import swiss_compliance_guard as guard
+import automaton
 
 ROOT = Path(__file__).resolve().parent
 ROSTER_FILE = ROOT / "agent_universes.json"
@@ -172,7 +173,8 @@ footer{margin-top:44px;color:#39465c;font-size:11px;font-family:var(--mono);lett
  <button data-p="ledger">📒 <span class="lbl">Ledger</span></button>
  <button data-p="comp">⚖ <span class="lbl">Compliance</span></button>
  <button data-p="log">📜 <span class="lbl">Audit Log</span></button>
- <button data-p="roster"> <span class="lbl">Universes</span></button>
+ <button data-p="roster">🌌 <span class="lbl">Universes</span></button>
+ <button data-p="auto">🤖 <span class="lbl">Automaton</span></button>
  <div class="mode dry" id="mode-pill">DRY-RUN</div>
 </nav>
 <main>
@@ -236,6 +238,30 @@ footer{margin-top:44px;color:#39465c;font-size:11px;font-family:var(--mono);lett
  <div class="sub">Modular hierarchy of the agent-run business. Each agent belongs to exactly one universe; category groups feed universes as blocks, Specialized Roles per-agent.</div>
  <div id="rs-body"></div>
 </section>
+<section id="p-auto" class="hidden">
+ <h1>🤖 CENTRAL AUTOMATON <span class="tag">// BOUNDED AUTONOMY</span></h1>
+ <div class="sub">Perceive → propose → (your approval) → execute. Replication is Nexus-gated; the kill switch stops everything.</div>
+ <div id="au-halt-warn"></div>
+ <div class="grid g4">
+  <div class="card"><h3>Cycle</h3><div class="big" id="au-cycle">–</div><div class="note" id="au-ts"></div></div>
+  <div class="card"><h3>Mode</h3><div class="big info" id="au-mode">–</div><div class="note">from config</div></div>
+  <div class="card"><h3>Workers</h3><div class="big gold" id="au-workers">–</div><div class="note">replicated instances</div></div>
+  <div class="card"><h3>Last cycle</h3><div class="big" id="au-sum">–</div><div class="note">proposals / executions / spawns</div></div>
+ </div>
+ <h2>Controls</h2>
+ <div class="card" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+  <select id="au-role"><option>ledger_audit</option><option>income_validate</option><option>plan_review</option><option>compliance_watch</option></select>
+  <button class="btn" id="au-spawn">Request replication</button>
+  <button class="btn red" id="au-halt">Engage kill switch</button>
+  <button class="btn ghost" id="au-resume">Resume</button>
+  <span class="note">replication requests land in The Nexus for your approval</span>
+ </div>
+ <h2>Budgets &amp; workers</h2>
+ <div class="grid g2"><div class="card"><h3>Limits</h3><div id="au-limits"></div></div>
+ <div class="card"><h3>Worker registry</h3><div class="scroll"><table><thead><tr><th>Id</th><th>Role</th><th>Status</th></tr></thead><tbody id="au-wtab"></tbody></table></div></div></div>
+ <h2>Inbox (income CSVs)</h2>
+ <div class="card"><pre id="au-inbox"></pre></div>
+</section>
 <footer>JARVIS CONTROL PLANE · LOCALHOST-ONLY BY DEFAULT · DRY-RUN UNTIL YOU SAY OTHERWISE · NOT FINANCIAL ADVICE</footer>
 </main>
 </div>
@@ -256,7 +282,7 @@ async function api(path, opt){
 const post = (path, body) => api(path, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)});
 const money = x => Number(x ?? 0).toLocaleString("en", {minimumFractionDigits:2, maximumFractionDigits:2});
 
-const loaders = {dash:loadDash, nexus:loadNexus, plans:loadPlans, ledger:loadLedger, comp:loadComp, log:loadLog, roster:loadRoster};
+const loaders = {dash:loadDash, nexus:loadNexus, plans:loadPlans, ledger:loadLedger, comp:loadComp, log:loadLog, roster:loadRoster, auto:loadAuto};
 $$("nav button").forEach(b => b.addEventListener("click", () => {
   $$("nav button").forEach(x => x.classList.remove("on")); b.classList.add("on");
   $$("main section").forEach(s => s.classList.add("hidden"));
@@ -377,6 +403,34 @@ async function loadRoster(){
   '<h2>Investment Automaton wiring</h2><div class="card"><pre>' + esc(JSON.stringify(r.investment_automaton_wiring, null, 2)) + '</pre></div>';
 }
 
+async function loadAuto(){
+  const a = await api("/api/automaton");
+  const h = a.heartbeat || {};
+  $("#au-halt-warn").innerHTML = a.halted ? '<div class="banner red">⚠ KILL SWITCH ENGAGED — the automaton is frozen. Resume to continue.</div>' : '';
+  $("#au-cycle").textContent = h.cycle ?? 0;
+  $("#au-ts").textContent = h.ts || "no cycle yet";
+  $("#au-mode").textContent = h.mode || a.state_mode || "–";
+  $("#au-workers").textContent = (a.workers || []).length;
+  const sm = h.summary || {};
+  $("#au-sum").textContent = (sm.proposals ?? 0) + " / " + (sm.executions ?? 0) + " / " + (sm.spawns ?? 0);
+  const L = a.limits || {};
+  $("#au-limits").innerHTML = Object.entries(L).map(([k,v]) => '<div class="kv"><span>' + esc(k.replace(/_/g," ")) + '</span><b>' + esc(String(v)) + '</b></div>').join("");
+  $("#au-wtab").innerHTML = (a.workers || []).map(w2 => '<tr><td>' + esc(w2.id) + '</td><td>' + esc(w2.role || "?") + '</td><td class="' + (w2.status === "done" ? "ok" : "warn") + '">' + esc(w2.status) + '</td></tr>').join("") || '<tr><td colspan="3" class="dim">No workers yet.</td></tr>';
+  $("#au-inbox").textContent = (a.inbox || []).join("\n") || "(empty — drop business income CSVs into runtime/inbox/)";
+}
+$("#au-spawn").addEventListener("click", async () => {
+  try { const r = await post("/api/automaton/spawn-request", {role: $("#au-role").value});
+    toast("replication staged: " + r.id + " — approve it in The Nexus", "ok"); loadNexus(); }
+  catch (e) { toast(e.message, "bad"); }
+});
+$("#au-halt").addEventListener("click", async () => {
+  try { await post("/api/automaton/halt", {}); toast("kill switch engaged", "ok"); loadAuto(); }
+  catch (e) { toast(e.message, "bad"); }
+});
+$("#au-resume").addEventListener("click", async () => {
+  try { await post("/api/automaton/resume", {}); toast("automaton resumed", "ok"); loadAuto(); }
+  catch (e) { toast(e.message, "bad"); }
+});
 loadDash().catch(e => toast(e.message, "bad"));
 </script>
 </body>
@@ -426,6 +480,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json({"ok": True, "text": _log_tail(n)})
             elif path == "/api/roster":
                 self._json({"ok": True, **_roster()})
+            elif path == "/api/automaton":
+                self._json({"ok": True, **automaton.status()})
             else:
                 self._err("not found", 404)
         except Exception as exc:  # keep the console alive
@@ -445,6 +501,19 @@ class Handler(BaseHTTPRequestHandler):
                 return self._err("invalid JSON")
             if path == "/api/nexus/decide":
                 self._decide(payload)
+            elif path == "/api/automaton/halt":
+                automaton.halt(); self._json({"ok": True, "halted": True})
+            elif path == "/api/automaton/resume":
+                automaton.resume(); self._json({"ok": True, "halted": False})
+            elif path == "/api/automaton/spawn-request":
+                role = str(payload.get("role", ""))
+                import worker_roles
+                if role not in worker_roles.ROLES:
+                    raise ValueError(f"unknown role {role!r}")
+                aid = nx.stage("spawn_worker",
+                               {"role": role, "note": "Core replication request from control plane"},
+                               proposed_by="Central Automaton (Core, via console)")
+                self._json({"ok": True, "id": aid})
             else:
                 self._err("not found", 404)
         except ValueError as exc:

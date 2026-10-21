@@ -125,6 +125,14 @@ class SwissComplianceLimits:
 LIMITS = SwissComplianceLimits()
 
 # --------------------------------------------------------------------------
+# Central Automaton budgets (bounded autonomy)
+# --------------------------------------------------------------------------
+AUTOMATON_CYCLE_INTERVAL_S = int(os.environ.get("AUTOMATON_CYCLE_INTERVAL_S", "300"))
+AUTOMATON_MAX_CYCLES_PER_DAY = int(os.environ.get("AUTOMATON_MAX_CYCLES_PER_DAY", "48"))
+AUTOMATON_MAX_PROPOSALS_PER_CYCLE = int(os.environ.get("AUTOMATON_MAX_PROPOSALS_PER_CYCLE", "6"))
+AUTOMATON_MAX_WORKERS = int(os.environ.get("AUTOMATON_MAX_WORKERS", "3"))
+
+# --------------------------------------------------------------------------
 # Error handling (STRICT CONSTRAINT): bounded retries, graceful halt
 # --------------------------------------------------------------------------
 MAX_CONNECT_ATTEMPTS = 2          # one reconnect, then halt — never infinite

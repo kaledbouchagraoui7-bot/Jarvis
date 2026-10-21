@@ -20,3 +20,6 @@ venv/
 Thumbs.db
 .idea/
 .vscode/
+
+# Static build output (Cloudflare Pages builds this in CI)
+dist/

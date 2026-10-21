@@ -171,3 +171,28 @@ sample_data/             example business income CSV
 .env.example             every knob, documented; copy to .env
 runtime/                 (gitignored) logs, ledger, Nexus store, sweep plans
 ```
+
+---
+
+## 7. Control Plane (`webapp.py`) — the business console
+
+App-style, localhost-only web console (stdlib-only, no new dependencies, no
+CDNs) over the same runtime state the CLI writes:
+
+```powershell
+python webapp.py          # opens http://localhost:8010
+```
+
+| Tab | Shows / does |
+|---|---|
+| Dashboard | mode (DRY-RUN/LIVE), Nexus inbox count, FIFO lots + avg holding, sweep policy, hard guardrails, latest plans |
+| The Nexus | review each staged action's full payload; **approve (phrase required) / reject (reason required)** from the browser; decision history |
+| Sweep Plans | per-period routing cards: net profit → investable → 3a / IBKR legs + QR reference |
+| Ledger | open FIFO lots (age colour-coded vs the 180-day rule) + fill history |
+| Compliance | enforced limits, portfolio-health warnings, audit snapshot for the Auditing Agent |
+| Audit Log | live tail of `runtime/investment_log.txt` |
+| Universes | the 7-universe / 110-agent hierarchy with the Automaton wiring |
+
+Design rule: **the console decides, the terminal executes** — approval is
+possible from the UI (it *is* the human gate), but order execution stays in
+`ibkr_dca_engine.py`, so no browser session can silently trade.

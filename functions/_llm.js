@@ -36,6 +36,19 @@ export async function generate(env, messages, maxTok){
       if (r.ok){ const t = extract(await r.json()); if (t) return {text: t, provider: "openai"}; }
     } catch (e) { /* fall through */ }
   }
+  if (env.OPENROUTER_API_KEY){
+    const orModels = (env.OPENROUTER_MODELS || "openrouter/auto").split(",").map(s => s.trim()).filter(Boolean);
+    for (const m of orModels){
+      try {
+        const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {"Authorization": "Bearer " + env.OPENROUTER_API_KEY, "content-type": "application/json",
+                    "HTTP-Referer": "https://jarvis-8wr.pages.dev", "X-Title": "JARVIS Nexus"},
+          body: JSON.stringify({model: m, messages, max_tokens: maxTok})});
+        if (r.ok){ const t = extract(await r.json()); if (t) return {text: t, provider: "openrouter:" + m}; }
+      } catch (e) { /* next */ }
+    }
+  }
   if (env.AI){
     const chain = (env.CHAT_MODELS || "@cf/deepseek-ai/deepseek-v4.1-flash-1017,@cf/qwen/qwen3.8-27b,@cf/zai-org/glm-4.7-flash")
       .split(",").map(s => s.trim()).filter(Boolean);

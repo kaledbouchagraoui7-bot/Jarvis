@@ -1,6 +1,7 @@
 // POST /portal/register — create a client account (founder-run onboarding).
 import { json, kvCheck, hashPassword } from "../_auth.js";
 export async function onRequestPost(context){
+  try {
   const { request, env } = context;
   const kv = kvCheck(env);
   if (!kv) return json({error:"storage_not_enabled"}, 503);
@@ -11,5 +12,5 @@ export async function onRequestPost(context){
   if (await kv.get(key)) return json({error:"account_exists"}, 409);
   const salt = crypto.randomUUID();
   await kv.put(key, JSON.stringify({email: email.toLowerCase(), salt, hash: await hashPassword(password, salt), at: new Date().toISOString()}));
-  return json({ok:true});
+  return json({ok:true});} catch (e) { return json({error:"internal", detail: String((e && e.stack) || e).slice(0,300)}, 500); }
 }

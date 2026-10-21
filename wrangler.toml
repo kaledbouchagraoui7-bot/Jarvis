@@ -1,0 +1,12 @@
+name = "jarvis"
+compatibility_date = "2026-05-01"
+pages_build_output_dir = "dist"
+
+# Client storage (created 2026-10-21 via API)
+kv_namespaces = [
+  { binding = "CONTACTS", id = "4c37dfc9c9854a9e9fd17db25d7bfb86" },
+  { binding = "PORTAL",   id = "c97cf59a79ed4600965ccfaf8e9d51bc" }
+]
+
+# Workers AI for the Nexus assistant (free tier)
+ai = { binding = "AI" }

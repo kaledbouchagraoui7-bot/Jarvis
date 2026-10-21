@@ -43,12 +43,16 @@ export async function onRequestPost(context){
     try {
       const ctx = (w ? "BACKGROUND: " + w.text + "\n" : "") +
         "CITED SOURCES:\n" + refs.map((r, i) => `[${i + 1}] ${r.title} (${r.year}) DOI ${r.doi}`).join("\n");
-      const out = await env.AI.run("@cf/meta/llama-3-8b-instruct", {
+      const MODELS = ["@cf/qwen/qwen3.8-27b", "@cf/zai-org/glm-4.7-flash"];
+      let out = null;
+      for (const m of MODELS) { try { out = await env.AI.run(m, {
         messages: [
           { role: "system", content: "You are Nexus, a research assistant. Write a 120-word brief answering the question using ONLY the provided background and cited sources. Cite sources as [n]. End with 'Confidence:' high/medium/low and one sentence why." },
           { role: "user", content: q + "\n\n" + ctx }],
-        max_tokens: 300 });
-      synthesis = (out && (out.response || out.result)) || null;
+        max_completion_tokens: 400, reasoning_effort: "low" });
+          const t = out && (out.response || out.result || (out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content) || (typeof out === "string" ? out : ""));
+          if (t) { out = { __txt: t }; break; } out = null; } catch (me) { } }
+      synthesis = (out && out.__txt) || null;
       if (synthesis) mode = "ai-synthesised";
     } catch { /* stay compiled */ }
   }

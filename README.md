@@ -177,7 +177,7 @@ runtime/                 (gitignored) logs, ledger, Nexus store, sweep plans
 ## 7. Control Plane (`webapp.py`) — the business console
 
 Public aesthetic layer (Cloudflare Pages): **https://jarvis-8wr.pages.dev**
-(landing + `console-demo.html` demo console with synthetic data).
+(landing with live sweep calculator, FAQ and contact — no synthetic data anywhere).
 `dist/` is committed so the Cloudflare pipeline deploys on every push.
 
 App-style, localhost-only web console (stdlib-only, no new dependencies, no

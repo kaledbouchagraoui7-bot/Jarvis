@@ -35,107 +35,6 @@ import webapp  # reuse the exact console UI (PAGE) — single source of truth
 ROOT = Path(__file__).resolve().parent
 DIST = ROOT / "dist"
 
-# ---------------------------------------------------------------- demo data --
-DEMO = {
-    "/api/state": {"ok": True, "mode": "DRY-RUN",
-                   "config_line": "DEMO BUILD — synthetic data · live console runs at localhost:8010",
-                   "audit": {"open_lots": 2, "fills": 3, "avg_holding_days": 214.0,
-                             "generated": "2026-11-01T09:00:00"},
-                   "health_warnings": [],
-                   "pending_count": 2,
-                   "plans": [
-                       {"period": "2026-08", "net_profit_chf": 0.0, "investable_chf": 0.0,
-                        "pillar_3a_chf": 0.0, "ibkr_chf": 0.0, "nexus_action_ids": []},
-                       {"period": "2026-09", "net_profit_chf": 1800.0, "investable_chf": 540.0,
-                        "pillar_3a_chf": 216.0, "ibkr_chf": 324.0,
-                        "nexus_action_ids": ["NX-DEMO-0001", "NX-DEMO-0002"]},
-                       {"period": "2026-10", "net_profit_chf": 5300.0, "investable_chf": 1590.0,
-                        "pillar_3a_chf": 636.0, "ibkr_chf": 954.0,
-                        "nexus_action_ids": ["NX-DEMO-0003", "NX-DEMO-0004"]}],
-                   "limits": {"min_holding_days": 180, "max_annual_turnover_ratio": 5.0,
-                              "max_orders_per_month": 12, "allow_margin": False,
-                              "allow_derivatives": False, "allow_short_selling": False},
-                   "sweep": {"share": 0.30, "alloc_3a": 0.40, "alloc_ibkr": 0.60,
-                             "cap_3a": 7258.0, "ticker": "VWRL"}},
-    "/api/nexus": {"ok": True,
-                   "pending": [
-                       {"id": "NX-DEMO-0003", "kind": "transfer_3a",
-                        "payload": {"period": "2026-10", "amount_chf": 636.0,
-                                    "qr_reference": "DEMO-QR-REF",
-                                    "target": "Pillar 3a provider (manual QR-bill execution)"},
-                        "proposed_by": "Cash Flow Manager agent (demo)",
-                        "status": "PENDING", "staged_at": "2026-11-01T09:00:00"},
-                       {"id": "NX-DEMO-0004", "kind": "ibkr_order",
-                        "payload": {"period": "2026-10", "amount_chf": 954.0,
-                                    "ticker": "VWRL",
-                                    "target": "IBKR DCA buy VWRL (limit order)"},
-                        "proposed_by": "Investment Analyst agent (proposal only, demo)",
-                        "status": "PENDING", "staged_at": "2026-11-01T09:00:00"}],
-                   "history": [
-                       {"at": "2026-10-31T18:12:00", "id": "NX-DEMO-0002",
-                        "kind": "ibkr_order", "decision": "APPROVED", "reason": ""},
-                       {"at": "2026-10-31T18:11:00", "id": "NX-DEMO-0001",
-                        "kind": "transfer_3a", "decision": "APPROVED", "reason": ""},
-                       {"at": "2026-09-30T20:40:00", "id": "NX-DEMO-0000",
-                        "kind": "spawn_worker", "decision": "REJECTED",
-                        "reason": "not needed this month (demo)"}]},
-    "/api/ledger": {"ok": True,
-                    "lots": [{"ticker": "VWRL", "qty": 7, "opened_ts": 1759276800,
-                              "opened_date": "2026-10-01"},
-                             {"ticker": "VWRL", "qty": 2, "opened_ts": 1756684800,
-                              "opened_date": "2026-09-01"}],
-                    "fills": [
-                        {"ts": 1759276800, "date": "2026-10-01", "side": "BUY",
-                         "ticker": "VWRL", "qty": 7, "price": 118.8, "currency": "CHF",
-                         "notional_chf": 831.6, "fx": 1.0},
-                        {"ts": 1756684800, "date": "2026-09-01", "side": "BUY",
-                         "ticker": "VWRL", "qty": 2, "price": 117.9, "currency": "CHF",
-                         "notional_chf": 235.8, "fx": 1.0}],
-                    "portfolio_value_start_chf": 0.0,
-                    "start_of_period": "2026-09-01"},
-    "/api/log": {"ok": True, "text":
-                 "[2026-11-01 09:00:00] [AUTOMATON d0] [INFO] cycle 42 done: "
-                 "{'proposals': 2, 'executions': 0, 'spawns': 0, 'workers_merged': 1}\n"
-                 "[2026-11-01 08:55:00] [NEXUS] staged NX-DEMO-0004 kind=ibkr_order "
-                 "awaiting human approval\n"
-                 "[2026-10-31 18:12:00] [NEXUS] decision APPROVED on NX-DEMO-0002\n"
-                 "[2026-10-31 18:12:01] [IBKR-DCA] [INFO] DRY-RUN fill 7 x VWRL @ 118.80 CHF\n"
-                 "(demo log — synthetic lines)"},
-    "/api/automaton": {"ok": True,
-                       "heartbeat": {"ts": "2026-11-01T09:00:00", "mode": "DRY-RUN",
-                                     "cycle": 42, "depth": 0, "halted": False,
-                                     "summary": {"proposals": 2, "executions": 0,
-                                                 "spawns": 0, "workers_merged": 1},
-                                     "workers_active": 1},
-                       "state": {"total_cycles": 42},
-                       "halted": False,
-                       "workers": [{"id": "W-DEMO-ledger_audit", "role": "ledger_audit",
-                                    "status": "done", "finished": "2026-11-01T08:59:00"}],
-                       "pending": [], "inbox": ["biz_2026-11.csv (demo)"],
-                       "limits": {"max_cycles_per_day": 48, "max_workers": 3,
-                                  "max_proposals_per_cycle": 6}},
-}
-
-DEMO_SHIM = """<script>
-/* STATIC DEMO SHIM — window.fetch returns canned synthetic data only. */
-window.__JARVIS_DEMO__ = true;
-const __DEMO__ = %s;
-window.fetch = (url, opts) => {
-  const path = String(url).split("?")[0];
-  const method = (opts && opts.method) || "GET";
-  let body;
-  if (method === "GET") body = __DEMO__[path] || {ok: true};
-  else if (path === "/api/nexus/decide") body = {ok: true, id: "NX-DEMO", decision: "approve"};
-  else if (path === "/api/automaton/halt") body = {ok: true, halted: true};
-  else if (path === "/api/automaton/resume") body = {ok: true, halted: false};
-  else if (path === "/api/automaton/spawn-request") body = {ok: true, id: "NX-DEMO-SPAWN"};
-  else body = {ok: true};
-  return Promise.resolve({ok: true, status: 200,
-    json: async () => body, text: async () => JSON.stringify(body)});
-};
-</script>
-"""
-
 DEMO_BAR_CSS = (".demobar{position:fixed;top:0;left:0;right:0;z-index:99;background:#1E1B16;"
                 "color:#F2EEE7;text-align:center;padding:8px 12px;font-family:var(--sans);"
                 "font-size:9.5px;letter-spacing:.28em;text-transform:uppercase}"
@@ -242,12 +141,21 @@ section{padding:70px 0}
 @media(max-width:860px){.gov{grid-template-columns:1fr}}
 footer{padding:54px 0 64px;text-align:center}
 footer p{font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--taupe)}
+.calc{margin-top:26px;background:var(--card);border:1px solid var(--line);padding:32px}
+.calc input{font-family:var(--serif);font-size:34px;padding:8px 14px;border:1px solid var(--line);background:var(--paper);width:250px;color:var(--ink);outline:none}
+.calc input:focus{border-color:var(--ink)}
+.cout{margin-top:26px}.cout b{display:block;font-family:var(--serif);font-size:31px;margin-top:7px;color:var(--ink)}
+.cout i{display:block;font-style:normal;font-size:11px;color:var(--taupe);margin-top:5px}
+.fine{font-size:11.5px;color:var(--taupe);margin-top:20px}
+#faq details{background:var(--card);border:1px solid var(--line);margin-bottom:10px;padding:16px 22px}
+#faq summary{font-family:var(--serif);font-size:20px;letter-spacing:0;text-transform:none;color:var(--ink)}
+#faq details p{font-size:13.5px;color:var(--ink2);margin-top:10px;max-width:760px}
 </style></head><body>
 <header><div class="wrap">
  <div class="topbar"><div class="brand">J A R V I S</div>
   <nav class="topnav"><a href="#approach">Approach</a><a href="#products">Products</a>
   <a href="#universes">Universes</a><a href="#governance">Governance</a>
-  <a href="console-demo.html">Control plane</a></nav></div>
+  <a href="#calculator">Calculator</a></nav></div>
  <div class="hero">
   <div>
    <div class="eyebrow">What makes an enterprise sovereign</div>
@@ -256,7 +164,7 @@ footer p{font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(
    <p class="lede">A lean Swiss solo enterprise where 110 specialist agents manufacture
    B2B deliverables at compute cost — and every franc, order and new machine
    instance waits for one keystroke: yours.</p>
-   <div style="margin-top:30px"><a class="btn" href="console-demo.html">Enter the control plane</a></div>
+   <div style="margin-top:30px"><a class="btn" href="#calculator">Try the sweep calculator</a></div>
   </div>
   <div class="plate">
    <div class="img" style="background-image:__MARBLE__"></div>
@@ -332,7 +240,67 @@ footer p{font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(
    <div class="kv"><span>Actions requiring human approval</span><b>100%</b></div></div>
  </div>
 </div></section>
+<section id="calculator"><div class="wrap">
+ <div class="eyebrow taupe">Try it — real maths, in your browser</div>
+ <h2 style="font-size:clamp(30px,3.6vw,44px);margin:12px 0 10px">What would this month invest?</h2>
+ <p style="color:var(--ink2);max-width:560px;font-size:14px">Type a monthly net profit (income minus expenses and tax reserve).
+ The same rules the real system applies: a 30% sweep, split 40% to Pillar 3a and 60% to the ETF —
+ and in the live system, nothing moves without your approval.</p>
+ <div class="calc">
+  <label class="eyebrow" for="c-in" style="display:block;margin-bottom:10px">Net profit this month (CHF)</label>
+  <input id="c-in" type="number" min="0" step="50" value="5000" inputmode="numeric">
+  <div class="cout grid g3">
+   <div><span class="eyebrow taupe">Monthly sweep · 30%</span><b id="c-sweep">—</b></div>
+   <div><span class="eyebrow taupe">To Pillar 3a</span><b id="c-3a">—</b><i id="c-capnote"></i></div>
+   <div><span class="eyebrow taupe">To ETF via IBKR</span><b id="c-etf">—</b></div>
+  </div>
+  <p class="fine">Estimate only. The live system applies the same percentages plus your remaining annual 3a ceiling,
+  compliance guardrails and your Nexus approval — on your machine, never in the cloud.</p>
+ </div>
+</div></section>
+<section id="faq" style="background:var(--paper2)"><div class="wrap">
+ <div class="eyebrow taupe">Plain answers</div>
+ <h2 style="font-size:clamp(30px,3.6vw,44px);margin:12px 0 18px">Questions, without jargon.</h2>
+ <details><summary>Who approves the money movements?</summary>
+  <p>You. Every transfer, order or new worker instance appears as a plain-language request —
+  “Request: transfer CHF 636.00 to your Pillar 3a provider” — and waits for your approval phrase.
+  Nothing executes by itself, ever.</p></details>
+ <details><summary>Can the system lose money on its own?</summary>
+  <p>No. It only buys whole shares of a broad global ETF at a limit price you approved: no leverage,
+  no derivatives, no short selling, and nothing sells before 180 days. The only risk left is ordinary
+  market movement on amounts you chose.</p></details>
+ <details><summary>Where does my data live?</summary>
+  <p>On your machine. Ledger, logs, approvals and plans are local files; this website carries no
+  personal or financial data at all.</p></details>
+ <details><summary>Is this investment advice?</summary>
+  <p>No. It is engineering that enforces rules you set. A qualified Swiss tax advisor validates the
+  thresholds before live use.</p></details>
+</div></section>
+<section id="contact"><div class="wrap" style="text-align:center">
+ <div class="eyebrow taupe">Contact</div>
+ <h2 style="font-size:clamp(30px,3.6vw,44px);margin:12px 0 14px">Work with the enterprise.</h2>
+ <p style="color:var(--ink2);max-width:470px;margin:0 auto 26px;font-size:14px">Retainers for lead enrichment
+ and programmatic SEO. One human reads every message.</p>
+ <a class="btn" href="mailto:kaled.boouchagraoui@gmail.com?subject=JARVIS%20enquiry">Write to the founder</a>
+</div></section>
 <footer><div class="wrap"><p>Jarvis Enterprises · Bootstrap → Sovereignty · Zürich — Genève · Not financial advice</p></div></footer>
+<script>
+(function(){
+  var inp = document.getElementById("c-in");
+  function fmt(v){ return "CHF " + v.toLocaleString("en",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function f(){
+    var net = Math.max(0, parseFloat(inp.value || "0") || 0);
+    var sweep = net * 0.30, cap = 7258;
+    var a = Math.min(sweep * 0.40, cap), e = sweep - a;
+    document.getElementById("c-sweep").textContent = fmt(sweep);
+    document.getElementById("c-3a").textContent = fmt(a);
+    document.getElementById("c-etf").textContent = fmt(e);
+    document.getElementById("c-capnote").textContent =
+      (sweep * 0.40 > cap) ? "annual ceiling reached — the overflow goes to the ETF" : "";
+  }
+  inp.addEventListener("input", f); f();
+})();
+</script>
 </body></html>
 """
 
@@ -342,26 +310,9 @@ def build_landing() -> str:
                    .replace("__VESSEL__", VESSEL))
 
 
-def build_demo_console(roster: dict) -> str:
-    page = webapp.PAGE
-    demo = json.loads(json.dumps(DEMO))  # copy
-    demo["/api/roster"] = {"ok": True, **roster}
-    shim = DEMO_SHIM % json.dumps(demo)
-    assert "<script>" in page
-    page = page.replace("<script>\n\"use strict\";", shim + "<script>\n\"use strict\";", 1)
-    page = page.replace("</style>", DEMO_BAR_CSS + "</style>", 1)
-    page = page.replace("<body>\n<div id=\"layout\">",
-                        "<body>\n<div class=\"demobar\">STATIC DEMO — SYNTHETIC DATA ONLY · "
-                        "THE LIVE CONSOLE RUNS ON THE FOUNDER'S MACHINE AT localhost:8010"
-                        "</div>\n<div id=\"layout\">", 1)
-    return page
-
-
 def main() -> int:
     DIST.mkdir(parents=True, exist_ok=True)
-    roster = json.loads((ROOT / "agent_universes.json").read_text(encoding="utf-8"))
     (DIST / "index.html").write_text(build_landing(), encoding="utf-8")
-    (DIST / "console-demo.html").write_text(build_demo_console(roster), encoding="utf-8")
     print(f"dist/ built at {time.strftime('%Y-%m-%d %H:%M:%S')}:")
     for p in sorted(DIST.iterdir()):
         print(f"  {p.name:<20} {p.stat().st_size:>8,} bytes")

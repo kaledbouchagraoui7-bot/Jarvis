@@ -319,7 +319,10 @@ $$("nav button").forEach(b => b.addEventListener("click", () => {
 async function loadDash(){
   const s = await api("/api/state");
   $("#mode-pill").textContent = s.mode; $("#mode-pill").className = "mode " + (s.mode === "LIVE" ? "live" : "dry");
-  $("#cfg-line").textContent = s.config_line;
+  $("#cfg-line").textContent = (s.mode === "LIVE" ? "Live mode — real orders possible. " : "Simulation mode — nothing leaves this machine. ") +
+    "Each month " + Math.round(s.sweep.share*100) + "% of net profit is swept: " + Math.round(s.sweep.alloc_3a*100) + "% to Pillar 3a, " +
+    Math.round(s.sweep.alloc_ibkr*100) + "% to " + s.sweep.ticker + ". Guardrails: " + s.limits.min_holding_days + "-day minimum holding, " +
+    s.limits.max_annual_turnover_ratio + "x turnover ceiling, no margin, no derivatives, no short selling.";
   $("#live-warn").innerHTML = s.mode === "LIVE" ? '<div class="banner red">⚠ LIVE MODE — real orders possible. Every execution still requires compliance + Nexus approval.</div>' : '<div class="banner blue">Simulation mode: fills are recorded as SimulatedFilled; no transfer or order leaves this machine.</div>';
   $("#d-pending").textContent = s.pending_count;
   $("#d-lots").textContent = s.audit.open_lots;
@@ -339,12 +342,33 @@ async function loadDash(){
     '<tr><td>' + esc(p.period) + '</td><td class="num">' + money(p.net_profit_chf) + '</td><td class="num">' + money(p.investable_chf) + '</td><td class="num">' + money(p.pillar_3a_chf) + '</td><td class="num">' + money(p.ibkr_chf) + '</td><td>' + ((p.nexus_action_ids || []).length ? '<span class="pill warn">' + (p.nexus_action_ids || []).length + ' staged</span>' : '<span class="pill ok">none</span>') + '</td></tr>').join("") || '<tr><td colspan="6" class="dim">No plans yet — run cashflow_bridge.py</td></tr>';
 }
 
+function chf(v){return "CHF " + Number(v||0).toLocaleString("en",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function humanRequest(r){
+  const p = r.payload || {};
+  if (r.kind === "transfer_3a") return "Request: transfer " + chf(p.amount_chf) + " to your Pillar 3a provider" +
+    (p.qr_reference && String(p.qr_reference).indexOf("PLACEHOLDER") === -1 ? " (QR reference " + esc(p.qr_reference) + ")" : "") +
+    " — you execute this step manually in your banking app.";
+  if (r.kind === "ibkr_order") return "Request: invest " + chf(p.amount_chf) + " into " + esc(p.ticker || "the target ETF") +
+    " as a whole-share limit order in your IBKR account (paper or live, per your .env).";
+  if (r.kind === "spawn_worker") return "Request: start one bounded worker (“" + esc(p.role || "analysis task") +
+    "”) on this machine — read-only analysis, it cannot move money.";
+  if (r.kind === "copytrade_rebalance") return "Request: mirror provider " + esc(p.provider || "—") + " position " +
+    esc(p.ticker || "") + " for " + chf(p.notional_chf) + ".";
+  return "Request: " + esc(r.kind);
+}
+function proposer(r){
+  const s = String(r.proposed_by || "");
+  if (s.indexOf("Cash Flow") !== -1) return "Cash Flow Manager agent";
+  if (s.indexOf("Automaton") !== -1) return "Central Automaton";
+  if (s.indexOf("Investment Analyst") !== -1) return "Investment Analyst agent (proposal only)";
+  return esc(s || "system");
+}
 async function loadNexus(){
   const n = await api("/api/nexus");
   $("#nx-pending").innerHTML = n.pending.length ? n.pending.map(r =>
-    '<div class="card" style="margin-bottom:12px"><h3>' + esc(r.id) + ' <span class="pill warn">' + esc(r.kind) + '</span></h3>' +
-    '<pre>' + esc(JSON.stringify(r.payload, null, 2)) + '</pre>' +
-    '<div class="note" style="margin:8px 0">proposed by: ' + esc(r.proposed_by) + ' · staged ' + esc(r.staged_at) + '</div>' +
+    '<div class="card" style="margin-bottom:12px"><h3>' + esc(r.kind.replace(/_/g," ")) + ' <span class="pill warn">awaiting you</span></h3>' +
+    '<div class="note" style="font-size:14px;color:var(--ink);margin:4px 0 10px;line-height:1.6">' + humanRequest(r) + '</div>' +
+    '<div class="note" style="margin:8px 0">Proposed by ' + proposer(r) + ' · staged ' + esc(r.staged_at) + ' · ref ' + esc(r.id) + '</div>' +
     '<form class="nxform" data-id="' + esc(r.id) + '" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">' +
     '<input name="phrase" placeholder="I-AUTHORISE-THIS-ACTION" style="width:250px">' +
     '<button class="btn" type="submit" data-d="approve">Approve</button>' +
@@ -374,7 +398,7 @@ async function loadPlans(){
     '<div class="kv"><span>Investable (30% sweep)</span><b>CHF ' + money(p.investable_chf) + '</b></div>' +
     '<div class="kv"><span>Pillar 3a leg</span><b class="gold">CHF ' + money(p.pillar_3a_chf) + '</b></div>' +
     '<div class="kv"><span>IBKR DCA leg</span><b class="info">CHF ' + money(p.ibkr_chf) + '</b></div>' +
-    '<div class="kv"><span>3a QR reference</span><b>' + esc(p.pillar_3a_qr_reference || "—") + '</b></div>' +
+    '<div class="kv"><span>3a payment reference</span><b>' + ((p.pillar_3a_qr_reference || "").indexOf("PLACEHOLDER") === -1 ? esc(p.pillar_3a_qr_reference) : "add yours in .env") + '</b></div>' +
     '<div class="note" style="margin-top:8px">' + esc(p.note || "") + '</div>' +
     ((p.nexus_action_ids || []).length ? '<div class="note" style="margin-top:4px">Nexus: ' + (p.nexus_action_ids || []).map(esc).join(", ") + '</div>' : '') +
     '</div>').join("") || '<div class="banner blue">No sweep plans yet.</div>';
@@ -399,7 +423,9 @@ async function loadComp(){
     ? s.health_warnings.map(w => '<div class="kv"><span class="warn">⚠</span><span>' + esc(w) + '</span></div>').join("")
     : '<div class="kv"><span class="ok">✓</span><span>No health warnings — holding period and turnover within safe-haven criteria.</span></div>')
     + '<div class="kv"><span>Weighted avg holding</span><b>' + s.audit.avg_holding_days + ' d</b></div>';
-  $("#cp-audit").textContent = JSON.stringify(s.audit, null, 2);
+  $("#cp-audit").innerHTML = [["open positions", s.audit.open_lots], ["recorded fills", s.audit.fills],
+    ["average holding", s.audit.avg_holding_days + " days"], ["snapshot taken", s.audit.generated]]
+    .map(([k,v]) => '<div class="kv"><span>' + esc(k) + '</span><b>' + esc(String(v)) + '</b></div>').join("");
 }
 
 async function loadLog(){

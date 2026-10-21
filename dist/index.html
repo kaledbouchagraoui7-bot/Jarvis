@@ -84,12 +84,21 @@ section{padding:70px 0}
 @media(max-width:860px){.gov{grid-template-columns:1fr}}
 footer{padding:54px 0 64px;text-align:center}
 footer p{font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--taupe)}
+.calc{margin-top:26px;background:var(--card);border:1px solid var(--line);padding:32px}
+.calc input{font-family:var(--serif);font-size:34px;padding:8px 14px;border:1px solid var(--line);background:var(--paper);width:250px;color:var(--ink);outline:none}
+.calc input:focus{border-color:var(--ink)}
+.cout{margin-top:26px}.cout b{display:block;font-family:var(--serif);font-size:31px;margin-top:7px;color:var(--ink)}
+.cout i{display:block;font-style:normal;font-size:11px;color:var(--taupe);margin-top:5px}
+.fine{font-size:11.5px;color:var(--taupe);margin-top:20px}
+#faq details{background:var(--card);border:1px solid var(--line);margin-bottom:10px;padding:16px 22px}
+#faq summary{font-family:var(--serif);font-size:20px;letter-spacing:0;text-transform:none;color:var(--ink)}
+#faq details p{font-size:13.5px;color:var(--ink2);margin-top:10px;max-width:760px}
 </style></head><body>
 <header><div class="wrap">
  <div class="topbar"><div class="brand">J A R V I S</div>
   <nav class="topnav"><a href="#approach">Approach</a><a href="#products">Products</a>
   <a href="#universes">Universes</a><a href="#governance">Governance</a>
-  <a href="console-demo.html">Control plane</a></nav></div>
+  <a href="#calculator">Calculator</a></nav></div>
  <div class="hero">
   <div>
    <div class="eyebrow">What makes an enterprise sovereign</div>
@@ -98,7 +107,7 @@ footer p{font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(
    <p class="lede">A lean Swiss solo enterprise where 110 specialist agents manufacture
    B2B deliverables at compute cost — and every franc, order and new machine
    instance waits for one keystroke: yours.</p>
-   <div style="margin-top:30px"><a class="btn" href="console-demo.html">Enter the control plane</a></div>
+   <div style="margin-top:30px"><a class="btn" href="#calculator">Try the sweep calculator</a></div>
   </div>
   <div class="plate">
    <div class="img" style="background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='800'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.06' numOctaves='4' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.66 0 0 0 0 0.60 0 0 0 0 0.50 0 0 0 0.85 0'/%3E%3C/filter%3E%3Crect width='640' height='800' fill='%23ECE6DC'/%3E%3Crect width='640' height='800' filter='url(%23m)' opacity='0.5'/%3E%3Cpath d='M60 640 C 220 520 340 700 580 560' stroke='%23FBFAF7' stroke-width='2.5' fill='none' opacity='0.65'/%3E%3Cpath d='M90 180 C 260 240 420 120 600 210' stroke='%23C9BFAF' stroke-width='1.5' fill='none' opacity='0.6'/%3E%3C/svg%3E")"></div>
@@ -174,5 +183,65 @@ footer p{font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(
    <div class="kv"><span>Actions requiring human approval</span><b>100%</b></div></div>
  </div>
 </div></section>
+<section id="calculator"><div class="wrap">
+ <div class="eyebrow taupe">Try it — real maths, in your browser</div>
+ <h2 style="font-size:clamp(30px,3.6vw,44px);margin:12px 0 10px">What would this month invest?</h2>
+ <p style="color:var(--ink2);max-width:560px;font-size:14px">Type a monthly net profit (income minus expenses and tax reserve).
+ The same rules the real system applies: a 30% sweep, split 40% to Pillar 3a and 60% to the ETF —
+ and in the live system, nothing moves without your approval.</p>
+ <div class="calc">
+  <label class="eyebrow" for="c-in" style="display:block;margin-bottom:10px">Net profit this month (CHF)</label>
+  <input id="c-in" type="number" min="0" step="50" value="5000" inputmode="numeric">
+  <div class="cout grid g3">
+   <div><span class="eyebrow taupe">Monthly sweep · 30%</span><b id="c-sweep">—</b></div>
+   <div><span class="eyebrow taupe">To Pillar 3a</span><b id="c-3a">—</b><i id="c-capnote"></i></div>
+   <div><span class="eyebrow taupe">To ETF via IBKR</span><b id="c-etf">—</b></div>
+  </div>
+  <p class="fine">Estimate only. The live system applies the same percentages plus your remaining annual 3a ceiling,
+  compliance guardrails and your Nexus approval — on your machine, never in the cloud.</p>
+ </div>
+</div></section>
+<section id="faq" style="background:var(--paper2)"><div class="wrap">
+ <div class="eyebrow taupe">Plain answers</div>
+ <h2 style="font-size:clamp(30px,3.6vw,44px);margin:12px 0 18px">Questions, without jargon.</h2>
+ <details><summary>Who approves the money movements?</summary>
+  <p>You. Every transfer, order or new worker instance appears as a plain-language request —
+  “Request: transfer CHF 636.00 to your Pillar 3a provider” — and waits for your approval phrase.
+  Nothing executes by itself, ever.</p></details>
+ <details><summary>Can the system lose money on its own?</summary>
+  <p>No. It only buys whole shares of a broad global ETF at a limit price you approved: no leverage,
+  no derivatives, no short selling, and nothing sells before 180 days. The only risk left is ordinary
+  market movement on amounts you chose.</p></details>
+ <details><summary>Where does my data live?</summary>
+  <p>On your machine. Ledger, logs, approvals and plans are local files; this website carries no
+  personal or financial data at all.</p></details>
+ <details><summary>Is this investment advice?</summary>
+  <p>No. It is engineering that enforces rules you set. A qualified Swiss tax advisor validates the
+  thresholds before live use.</p></details>
+</div></section>
+<section id="contact"><div class="wrap" style="text-align:center">
+ <div class="eyebrow taupe">Contact</div>
+ <h2 style="font-size:clamp(30px,3.6vw,44px);margin:12px 0 14px">Work with the enterprise.</h2>
+ <p style="color:var(--ink2);max-width:470px;margin:0 auto 26px;font-size:14px">Retainers for lead enrichment
+ and programmatic SEO. One human reads every message.</p>
+ <a class="btn" href="mailto:kaled.boouchagraoui@gmail.com?subject=JARVIS%20enquiry">Write to the founder</a>
+</div></section>
 <footer><div class="wrap"><p>Jarvis Enterprises · Bootstrap → Sovereignty · Zürich — Genève · Not financial advice</p></div></footer>
+<script>
+(function(){
+  var inp = document.getElementById("c-in");
+  function fmt(v){ return "CHF " + v.toLocaleString("en",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function f(){
+    var net = Math.max(0, parseFloat(inp.value || "0") || 0);
+    var sweep = net * 0.30, cap = 7258;
+    var a = Math.min(sweep * 0.40, cap), e = sweep - a;
+    document.getElementById("c-sweep").textContent = fmt(sweep);
+    document.getElementById("c-3a").textContent = fmt(a);
+    document.getElementById("c-etf").textContent = fmt(e);
+    document.getElementById("c-capnote").textContent =
+      (sweep * 0.40 > cap) ? "annual ceiling reached — the overflow goes to the ETF" : "";
+  }
+  inp.addEventListener("input", f); f();
+})();
+</script>
 </body></html>

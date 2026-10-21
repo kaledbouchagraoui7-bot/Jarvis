@@ -5,6 +5,15 @@ export async function onRequestPost(context){
   let body; try { body = await request.json(); } catch { return json({error:"bad_json"}, 400); }
   const { name, email, message } = body || {};
   if (!email || !message) return json({error:"email_and_message_required"}, 400);
+  if (env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY){
+    try {
+      await fetch(env.SUPABASE_URL + "/rest/v1/contact_messages", {
+        method: "POST",
+        headers: {"apikey": env.SUPABASE_SERVICE_KEY, "Authorization": "Bearer " + env.SUPABASE_SERVICE_KEY,
+                  "Content-Type": "application/json", "Prefer": "return=minimal"},
+        body: JSON.stringify({name: name || null, email, message})});
+    } catch (e) { /* KV below still covers us */ }
+  }
   const store = env.CONTACTS;
   if (store){
     await store.put("contact:" + Date.now() + ":" + (email || "anon"),

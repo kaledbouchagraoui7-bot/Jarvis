@@ -52,12 +52,14 @@
     return {answer: "I can help with products, pricing, safety, governance, data, contact, research briefs, the system map and proposal documents — or open the full Nexus interface for tools. For anything else: cogops.engine@gmail.com", topic: "fallback"};
   };
   window.__nexusAsk = async function(q){
+    var kbHit = window.__nexusKB(q);
+    if (kbHit.topic !== "fallback")   /* fact questions cost zero model tokens */
+      return {answer: kbHit.answer, mode: "knowledge", reasoning: ["matched a published-fact cluster", "answered without spending any AI tokens"]};
     try {
       var r = await fetch("/api/chat", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({message: q, history: (JSON.parse(localStorage.getItem("jarvis_nexus_mem") || "[]")).slice(-6)})});
       if (r.ok){ var j = await r.json(); if (j.answer) return {answer: j.answer, mode: "nexus ai", reasoning: j.reasoning || []}; }
     } catch (e) {}
-    var k = window.__nexusKB(q);
-    return {answer: k.answer, mode: "knowledge", reasoning: ["matched question to a published-fact cluster", "answered strictly from the enterprise's public information"]};
+    return {answer: kbHit.answer, mode: "knowledge", reasoning: ["AI unreachable — answered from published facts"]};
   };
   function buildChat(){
     var fab = document.createElement("button"); fab.id = "chat-fab"; fab.setAttribute("aria-label","Open concierge chat"); fab.textContent = "✦";

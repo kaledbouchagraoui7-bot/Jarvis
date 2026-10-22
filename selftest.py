@@ -126,10 +126,28 @@ def main() -> int:
     guard.record_fill("BUY", "VWRL", 5, 118.0, "CHF", 590.0)
     young = guard.check_order({**base, "side": "SELL", "qty": 5, "notional_chf": 590.0}, 50_000)
     check("guard: sell of 0-day lot blocked (<180d)", not young.ok, "; ".join(young.violations[:1]))
-    big = guard.check_order({**base, "qty": 500, "notional_chf": 59_000}, 1_000)
-    check("guard: turnover ceiling blocked", not big.ok, "; ".join(big.violations[:1]))
+    big = guard.check_order({**base, "side": "SELL", "qty": 500, "notional_chf": 59_000}, 1_000)
+    check("guard: churn sell blocked by turnover ceiling", not big.ok, "; ".join(big.violations[:1]))
+    huge = guard.check_order({**base, "qty": 900, "notional_chf": 100_000.0}, 0.0)
+    check("guard: CHF 100k fresh-capital buy NOT blocked (no maximum)", huge.ok, "; ".join(huge.violations[:1]))
+    check("config: one-cent floor, no carry-over above it", config.MIN_ORDER_CHF <= 0.01, str(config.MIN_ORDER_CHF))
     health = guard.portfolio_health(50_000)
     check("guard: holding tracker reports avg days", "avg_holding_days" in health.info)
+    o1 = eng.build_order(50.0, 118.5, config.DCA_TARGETS["VWRL"], 1.0)
+    check("engine: sub-share amount becomes fractional order",
+          o1["fractional"] and 0 < o1["qty"] < 1 and o1["residual_chf"] == 0.0, f"qty={o1['qty']}")
+    o2 = eng.build_order(0.01, 118.5, config.DCA_TARGETS["VWRL"], 1.0)
+    check("engine: one-cent order investable (fractional floor)",
+          o2["fractional"] and o2["qty"] > 0, f"qty={o2['qty']}")
+    o3 = eng.build_order(900.0, 118.5, config.DCA_TARGETS["VWRL"], 1.0)
+    check("engine: whole-share sizing + residual carry-over",
+          (not o3["fractional"]) and o3["qty"] == 7 and 60 < o3["residual_chf"] < 75,
+          f"qty={o3['qty']} residual={o3['residual_chf']}")
+    small = cb.compute_plan({"period": "2026-11", "gross": 200.0, "expenses": 30.0,
+                             "tax_reserve": 10.0 / 3.0})
+    check("cashflow: CHF 30 IBKR leg invested, not carried over",
+          abs(small["ibkr_chf"] - 30.0) < 0.01 and "standard routing" in small["note"],
+          f"ibkr={small['ibkr_chf']} | {small['note']}")
 
     # ---------------- 5. DCA engine dry-run ----------------
     plan = {"period": "2026-09", "ibkr_chf": 900.0, "nexus_action_ids": []}

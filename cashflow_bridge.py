@@ -80,7 +80,7 @@ def compute_plan(row: dict) -> dict:
     else:
         plan_3a = config.as_chf(min(investable * config.ALLOC_PILLAR_3A, cap_left))
         plan_ibkr = config.as_chf(investable - plan_3a)
-        if plan_3a < investable * config.ALLOC_PILLAR_3A:
+        if plan_3a < investable * config.ALLOC_PILLAR_3A - 0.005:  # tolerance: as_chf rounding
             note = (f"3a leg capped at remaining annual ceiling "
                     f"CHF {cap_left:,.2f}; overflow redirected to IBKR")
         else:

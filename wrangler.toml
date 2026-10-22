@@ -10,3 +10,8 @@ kv_namespaces = [
 
 # Workers AI for the Nexus assistant (free tier)
 ai = { binding = "AI" }
+
+# Nexus brain chain: OPENROUTER_MODELS lives as a project-level Pages variable
+# (dashboard → jarvis → Settings → Variables) so models can be swapped without
+# a redeploy; functions/_llm.js carries the same chain as code-level fallback.
+# Do NOT re-declare it under [vars] here — Pages rejects the duplicate binding.

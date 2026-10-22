@@ -1,7 +1,15 @@
 // Unified LLM gateway for JARVIS Pages Functions.
-// Provider priority: Anthropic key > OpenAI key > Cloudflare Workers AI chain.
+// Provider priority: Anthropic key > OpenAI key > OpenRouter > godmode > Workers AI.
 // Everything is env-driven: swap models or providers with dashboard variables
 // or secrets — no code change, no redeploy of logic.
+//
+// OPENROUTER_MODELS default chain = the strongest models on the live catalog
+// (verified 2026-10-22), frontier paid first (fast-fail HTTP 402 at $0 credits,
+// ~0.1s each — they wake up the instant credits are added), then the strongest
+// :free models that answer cleanly within the 300-token budget. Excluded on
+// purpose: nemotron-3.5-* (reasoning overrun: burn the whole budget thinking,
+// return empty content), inkling (agentic-harness only), lfm-2.5 (49s latency),
+// code-only and classifier models.
 import { json } from "./_auth.js";
 
 function extract(out){
@@ -38,7 +46,11 @@ export async function generate(env, messages, maxTok){
   }
   const orErrs = [];
   if (env.OPENROUTER_API_KEY){
-    const orModels = (env.OPENROUTER_MODELS || "openrouter/auto").split(",").map(s => s.trim()).filter(Boolean);
+    const orModels = (env.OPENROUTER_MODELS ||
+      "anthropic/claude-fable-5.1,openai/gpt-6-astra,google/gemini-4-argon,x-ai/grok-4.7," +
+      "deepseek/deepseek-v4-pro-0813,nvidia/nemotron-3-ultra-550b-a55b:free," +
+      "minimax/minimax-m3.1-flash:free,google/gemma-4-31b-it:free,recursive/flint-v1.0:free"
+    ).split(",").map(s => s.trim()).filter(Boolean);
     for (const m of orModels){
       try {
         const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {

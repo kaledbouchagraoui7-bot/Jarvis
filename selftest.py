@@ -90,8 +90,6 @@ def main() -> int:
     cfg.PILLAR_3A_ANNUAL_CAP_CHF = old_cap
     check("cashflow: 3a capped, overflow to IBKR", capped["pillar_3a_chf"] == 500.0 and capped["ibkr_chf"] > 0, f"3a={capped['pillar_3a_chf']} ibkr={capped['ibkr_chf']}")
 
-    tiny = cb.compute_plan({"period": "2026-05", "gross": 1.0, "expenses": 0.0, "tax_reserve": 0.0})
-    check("cashflow: one-cent-scale profit still routes (no minimum)", tiny["ibkr_chf"] > 0 and tiny["pillar_3a_chf"] > 0, f"3a={tiny['pillar_3a_chf']} ibkr={tiny['ibkr_chf']}")
     # ---------------- 3. Nexus gate ----------------
     aid = nx.stage("ibkr_order", {"amount_chf": 100.0, "ticker": "VWRL"}, proposed_by="selftest")
     try:
@@ -122,19 +120,14 @@ def main() -> int:
             "limit_price": 118.0, "currency": "CHF", "margin": False,
             "derivative": False, "short": False, "notional_chf": 590.0}
     check("guard: clean DCA buy passes", bool(guard.check_order(base, 50_000)))
-    huge = guard.check_order({**base, "qty": 900, "notional_chf": 100_000.0}, 0.0)
-    check("guard: CHF 100k fresh-capital buy NOT blocked (no maximum)", huge.ok, "; ".join(huge.violations[:1]))
-    churn = guard.check_order({**base, "side": "SELL", "qty": 900, "notional_chf": 100_000.0}, 0.0)
-    check("guard: immediate 100k sell still blocked (holding rule intact)", not churn.ok)
-
     check("guard: margin blocked", not guard.check_order({**base, "margin": True}, 50_000))
     check("guard: derivatives blocked", not guard.check_order({**base, "derivative": True, "sec_type": "OPT"}, 50_000))
     check("guard: short selling blocked", not guard.check_order({**base, "short": True, "side": "SELL"}, 50_000))
     guard.record_fill("BUY", "VWRL", 5, 118.0, "CHF", 590.0)
     young = guard.check_order({**base, "side": "SELL", "qty": 5, "notional_chf": 590.0}, 50_000)
     check("guard: sell of 0-day lot blocked (<180d)", not young.ok, "; ".join(young.violations[:1]))
-    big = guard.check_order({**base, "side": "SELL", "qty": 500, "notional_chf": 59_000}, 1_000)
-    check("guard: turnover ceiling blocked on churning sell", not big.ok and "turnover" in big.violations[0], "; ".join(big.violations[:1]))
+    big = guard.check_order({**base, "qty": 500, "notional_chf": 59_000}, 1_000)
+    check("guard: turnover ceiling blocked", not big.ok, "; ".join(big.violations[:1]))
     health = guard.portfolio_health(50_000)
     check("guard: holding tracker reports avg days", "avg_holding_days" in health.info)
 
@@ -154,37 +147,6 @@ def main() -> int:
     check("engine: approved dry-run fills + records lot", rc == 0 and any(l["ticker"] == "VWRL" for l in led["lots"]), f"lots={len(led['lots'])}")
     audit = guard.audit_summary()
     check("audit: summary exposes limits for Auditing Agent", audit["limits"]["allow_margin"] is False and audit["fills"] >= 1)
-
-    # ---------------- 6. central automaton ----------------
-    import automaton as auto
-    inbox_csv = config.RUNTIME_DIR / "inbox" / "biz_2026-11.csv"
-    inbox_csv.write_text("period,gross_income_chf,business_expenses_chf,tax_reserve_chf\n2026-11,6000,2000,800\n")
-    before = len(nx.list_pending())
-    s = auto.cycle()
-    check("automaton: inbox CSV -> staged proposals", s.get("proposals", 0) >= 2 and len(nx.list_pending()) > before, str(s))
-    auto.halt()
-    check("automaton: kill switch skips cycle", auto.cycle().get("skipped") == "halted")
-    auto.resume()
-    old_cap = config.AUTOMATON_MAX_CYCLES_PER_DAY
-    config.AUTOMATON_MAX_CYCLES_PER_DAY = 0
-    check("automaton: daily budget blocks cycle", auto.cycle().get("skipped") == "daily-budget")
-    config.AUTOMATON_MAX_CYCLES_PER_DAY = old_cap
-    old_depth = auto.SPAWN_DEPTH
-    auto.SPAWN_DEPTH = 1
-    check("automaton: worker cannot replicate (depth cap)", auto.spawn_worker("ledger_audit", "NX-FAKE") is None)
-    auto.SPAWN_DEPTH = old_depth
-    sp = nx.stage("spawn_worker", {"role": "ledger_audit"}, proposed_by="selftest")
-    nx.decide(sp, "APPROVED")
-    s = auto.cycle()
-    check("automaton: approved spawn replicates a worker", s.get("spawns") == 1, str(s))
-    import time as _t
-    reports = list(config.RUNTIME_DIR.glob("workers/*/report.json"))
-    for _ in range(30):
-        if reports: break
-        _t.sleep(0.5); reports = list(config.RUNTIME_DIR.glob("workers/*/report.json"))
-    check("automaton: worker wrote bounded report", bool(reports) and "qty_reconciliation" in json.loads(reports[0].read_text())["result"], reports[0].name if reports else "none")
-    st = auto.status()
-    check("automaton: status exposes heartbeat+workers", st["heartbeat"].get("cycle", 0) >= 1 and isinstance(st["workers"], list))
 
     shutil.rmtree(tmp, ignore_errors=True)
     print("\n" + ("ALL GREEN" if not FAILS else f"FAILURES: {FAILS}"))

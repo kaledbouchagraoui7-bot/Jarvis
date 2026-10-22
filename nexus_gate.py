@@ -39,7 +39,7 @@ from pathlib import Path
 import config
 
 CONFIRM_PHRASE = "I-AUTHORISE-THIS-ACTION"
-VALID_KINDS = ("transfer_3a", "ibkr_order", "copytrade_rebalance", "spawn_worker")
+VALID_KINDS = ("transfer_3a", "ibkr_order", "copytrade_rebalance")
 
 
 class NexusDenied(RuntimeError):
@@ -106,17 +106,8 @@ def require_approval(action_id: str) -> dict:
     raise NexusDenied(f"action {action_id} unknown to The Nexus — blocked.")
 
 
-def list_pending() -> list:
-    return [r for r in _read(config.NEXUS_PENDING) if r["status"] == "PENDING"]
-
-
-def list_history(limit: int = 50) -> list:
-    return _read(config.NEXUS_HISTORY)[-limit:]
-
-
 # ------------------------------------------------------------------- human --
-def decide(action_id: str, decision: str, reason: str = "") -> None:
-    """Programmatic decision API (used by the CLI and the control-plane UI)."""
+def _decide(action_id: str, decision: str, reason: str = "") -> None:
     pending = _read(config.NEXUS_PENDING)
     target = next((r for r in pending if r["id"] == action_id), None)
     if target is None:
@@ -176,10 +167,10 @@ def main(argv=None) -> int:
         if args.confirm != CONFIRM_PHRASE:
             print(f"confirmation phrase mismatch — expected exactly: {CONFIRM_PHRASE}")
             return 1
-        decide(args.action_id, "APPROVED")
+        _decide(args.action_id, "APPROVED")
         return 0
     if args.cmd == "reject":
-        decide(args.action_id, "REJECTED", args.reason)
+        _decide(args.action_id, "REJECTED", args.reason)
         return 0
     return 1
 

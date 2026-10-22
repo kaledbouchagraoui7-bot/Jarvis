@@ -20,7 +20,3 @@ venv/
 Thumbs.db
 .idea/
 .vscode/
-
-# dist/ is COMMITTED on purpose: the Cloudflare build pipeline has no
-# build command (Build command: None) and deploys dist/ straight from git.
-# Regenerate locally with: python3 build_static.py

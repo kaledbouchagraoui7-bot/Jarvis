@@ -100,8 +100,7 @@ DCA_TARGETS: dict[str, EtfTarget] = {
 PRIMARY_TICKER = os.environ.get("PRIMARY_TICKER", "VWRL")
 LIMIT_MAX_OFFSET_BPS = float(os.environ.get("LIMIT_MAX_OFFSET_BPS", "25"))  # limit <= mid*(1+25bps)
 DRY_RUN_PRICES = {"VWRL": 118.50, "VT": 132.40}        # simulated marks for DRY_RUN only
-MIN_ORDER_CHF = float(os.environ.get("MIN_ORDER_CHF", "0.01"))            # sanity floor: one cent. No maximum by design.
-FRACTIONAL_SHARES = os.environ.get("FRACTIONAL_SHARES", "true").lower() in ("1", "true", "yes")  # cash-quantity orders when amount < one share
+MIN_ORDER_CHF = float(os.environ.get("MIN_ORDER_CHF", "50.0"))             # below -> carry over
 
 # --------------------------------------------------------------------------
 # Copy-trading (Part A §3 secondary) — strict parameter envelope
@@ -124,14 +123,6 @@ class SwissComplianceLimits:
     max_orders_per_month: int = int(os.environ.get("MAX_ORDERS_PER_MONTH", "12"))
 
 LIMITS = SwissComplianceLimits()
-
-# --------------------------------------------------------------------------
-# Central Automaton budgets (bounded autonomy)
-# --------------------------------------------------------------------------
-AUTOMATON_CYCLE_INTERVAL_S = int(os.environ.get("AUTOMATON_CYCLE_INTERVAL_S", "300"))
-AUTOMATON_MAX_CYCLES_PER_DAY = int(os.environ.get("AUTOMATON_MAX_CYCLES_PER_DAY", "48"))
-AUTOMATON_MAX_PROPOSALS_PER_CYCLE = int(os.environ.get("AUTOMATON_MAX_PROPOSALS_PER_CYCLE", "6"))
-AUTOMATON_MAX_WORKERS = int(os.environ.get("AUTOMATON_MAX_WORKERS", "3"))
 
 # --------------------------------------------------------------------------
 # Error handling (STRICT CONSTRAINT): bounded retries, graceful halt

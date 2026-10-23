@@ -89,25 +89,14 @@ def market_mid(ib, tgt: config.EtfTarget):
 
 
 def build_order(amount_chf: float, price: float, tgt: config.EtfTarget, fx: float):
-    """LIMIT buy — floor one cent (config.MIN_ORDER_CHF), NO maximum.
-
-    Whole shares when the amount allows; below one share it becomes a
-    fractional cash-quantity order (IBKR cashQty) so even CHF 0.01 invests.
-    Whole-share residual carries over to the next sweep."""
-    qty, fractional = 0, False
-    if price > 0:
-        qty = int(math.floor(amount_chf / fx / price))
-        if qty <= 0 and config.FRACTIONAL_ENABLED and amount_chf >= config.MIN_ORDER_CHF:
-            qty = round(amount_chf / (price * fx), 6)      # fractional share count
-            fractional = True
+    """Whole-share LIMIT buy; residual cash carries over to next sweep."""
+    qty = int(math.floor(amount_chf / fx / price)) if price > 0 else 0
     limit = config.as_chf(price * (1 + config.LIMIT_MAX_OFFSET_BPS / 10_000.0))
-    notional = config.as_chf(min(qty * limit * fx, amount_chf))
     return {"side": "BUY", "sec_type": "STK", "ticker": tgt.symbol, "qty": qty,
             "limit_price": limit, "currency": tgt.currency, "margin": False,
-            "derivative": False, "short": False, "fractional": fractional,
-            "cash_qty": round(amount_chf / fx, 2) if fractional else None,
-            "notional_chf": notional,
-            "residual_chf": config.as_chf(max(amount_chf - notional, 0.0))}
+            "derivative": False, "short": False,
+            "notional_chf": config.as_chf(qty * limit * fx),
+            "residual_chf": config.as_chf(amount_chf - qty * limit * fx)}
 
 
 def execute(ib, order: dict, tgt: config.EtfTarget):
@@ -116,10 +105,6 @@ def execute(ib, order: dict, tgt: config.EtfTarget):
     contract = Stock(tgt.symbol, tgt.exchange, tgt.currency)
     ib.qualifyContracts(contract)
     leg = LimitOrder("BUY", order["qty"], order["limit_price"])
-    if order.get("fractional"):
-        # IBKR cash-quantity fractional order: totalQuantity 0 + cashQty amount
-        leg.totalQuantity = 0
-        leg.cashQty = order.get("cash_qty")
     trade = ib.placeOrder(contract, leg)
     ib.sleep(3)
     status = trade.orderStatus.status

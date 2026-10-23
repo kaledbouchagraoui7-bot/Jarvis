@@ -122,17 +122,9 @@ def check_order(order: dict, portfolio_value_chf: float) -> ComplianceReport:
 
     # turnover ratio on the trailing 365 days (only sells/adds move the needle)
     year_ago = time.time() - 365 * DAY
-    recent = [f for f in led["fills"] if f["ts"] >= year_ago]
-    traded = sum(f["notional_chf"] for f in recent) + order.get("notional_chf", 0.0)
-    # Fresh capital counts toward the base: window contributions (plus this
-    # order when it is a BUY) legitimately raise turnover capacity — a one-off
-    # CHF 100'000 investment is NEVER blocked (no maximum), while churn (sells
-    # beyond 5x the portfolio) still trips the private-investor ceiling.
-    contributed = sum(f["notional_chf"] for f in recent if f["side"] == "BUY")
-    if order.get("side") == "BUY":
-        contributed += order.get("notional_chf", 0.0)
-    base = max(portfolio_value_chf, contributed,
-               led.get("portfolio_value_start_chf", 0.0), 1.0)
+    traded = sum(f["notional_chf"] for f in led["fills"] if f["ts"] >= year_ago)
+    traded += order.get("notional_chf", 0.0)
+    base = max(portfolio_value_chf, led.get("portfolio_value_start_chf", 0.0), 1.0)
     ratio = traded / base
     info["trailing_turnover_ratio"] = round(ratio, 3)
     if ratio > L.max_annual_turnover_ratio:
